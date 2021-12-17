@@ -109,7 +109,7 @@ class ScriptLinker {
           return pkg
         },
         pathFilter (pkg, path, relativePath) {
-          // console.log('path:', path, relativePath, pkg)
+          // TODO: can be used to impl the full export mapping for file imports
           return relativePath
         }
       }, function (err, res) {
@@ -235,7 +235,6 @@ class ScriptLinker {
           mod._compile(Module._getSource(filename, opts), filename)
         },
         '.json': function (mod, filename, opts) {
-          console.log('in .json')
           mod.exports = JSON.parse(Module._getSource(filename, opts))
         }
       }
