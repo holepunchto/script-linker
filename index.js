@@ -16,10 +16,11 @@ const defaultBuiltins = {
 }
 
 class ScriptLinker {
-  constructor ({ map = defaultMap, builtins = defaultBuiltins, stat, readFile, isFile, isDirectory }) {
+  constructor ({ map = defaultMap, builtins = defaultBuiltins, linkSourceMaps = true, stat, readFile, isFile, isDirectory }) {
     this.map = map
     this.modules = new Map()
     this.builtins = builtins
+    this.linkSourceMaps = linkSourceMaps
 
     this._userStat = stat || null
     this._userReadFile = readFile || null
