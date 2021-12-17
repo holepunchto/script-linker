@@ -1,7 +1,6 @@
 const Mod = require('./lib/module')
 const defaultCompile = require('./lib/compile')
 const resolveModule = require('resolve')
-const isProperty = require('is-property')
 const b4a = require('b4a')
 const path = require('path')
 const Module = require('module')
@@ -278,5 +277,5 @@ function getPath (o, path) {
 }
 
 function defaultMap (id, { isImport, isBuiltin, isSourceMap }) {
-  return (isImport ? 'module://' : 'commonjs://' ) + (isBuiltin ? '' : ScriptLinker.defaultUserspace) + id + (isSourceMap ? '.map' : '')
+  return (isImport ? 'module://' : 'commonjs://') + (isBuiltin ? '' : ScriptLinker.defaultUserspace) + id + (isSourceMap ? '.map' : '')
 }
