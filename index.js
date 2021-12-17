@@ -204,10 +204,15 @@ class ScriptLinker {
         return sl.createRequire(filename, null)
       }
 
-      Module._resolveFilename = function (request, parent, isMain, opts, dirname) {
+      Module._resolveFilename = function (request, parent, isMain, opts) {
         if (opts && opts.resolved) return request
+        if (opts && opts.error) throw new Error(opts.error)
         if (request === 'module') return request // special case for this module
-        return builtins.has(request) ? request : resolveSync(request, parent ? parent.path : dirname, { isImport: false })
+        try {
+          return builtins.has(request) ? request : resolveSync(request, parent.path, { isImport: false })
+        } catch {
+          throw new Error(`Cannot find module '${request}' required from ${parent.id}`)
+        }
       }
 
       Module._load = function (request, parent, isMain, opts) {
