@@ -76,13 +76,13 @@ class ScriptLinker {
     }
 
     m = new Mod(this, filename, opts)
-    this.modules.set(filename, m)
+    this.modules.set(m.filename, m)
 
     try {
       await m.refresh()
       return m
     } catch (err) {
-      this.modules.delete(ufname)
+      this.modules.delete(m.filename)
       throw err
     }
   }
@@ -98,6 +98,7 @@ class ScriptLinker {
           cb(null, name)
         },
         isFile: (name, cb) => {
+          console.log(name)
           self._isFile(name, cb)
         },
         isDirectory: (name, cb) => {
@@ -119,7 +120,7 @@ class ScriptLinker {
         }
       }, function (err, res) {
         if (err) return reject(err)
-        resolve((res) ? unixify(res) : res)
+        resolve(unixify(res))
       })
     })
   }
