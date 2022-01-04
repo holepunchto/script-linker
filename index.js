@@ -97,7 +97,6 @@ class ScriptLinker {
           cb(null, name)
         },
         isFile: (name, cb) => {
-          console.log(name)
           self._isFile(name, cb)
         },
         isDirectory: (name, cb) => {
