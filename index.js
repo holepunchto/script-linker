@@ -4,6 +4,10 @@ const resolveModule = require('resolve')
 const b4a = require('b4a')
 const path = require('path')
 const Module = require('module')
+const unixify = require('./lib/unixify.js')
+const Xcache = require('xache')
+
+const DEFAULT_CACHE_SIZE = 500
 
 const defaultBuiltins = {
   has (ns) {
@@ -15,9 +19,9 @@ const defaultBuiltins = {
 }
 
 class ScriptLinker {
-  constructor ({ map = defaultMap, builtins = defaultBuiltins, linkSourceMaps = true, defaultType = 'commonjs', stat, readFile, isFile, isDirectory }) {
+  constructor ({ map = defaultMap, builtins = defaultBuiltins, linkSourceMaps = true, defaultType = 'commonjs', stat, readFile, isFile, isDirectory, cacheSize }) {
     this.map = map
-    this.modules = new Map()
+    this.modules = new Xcache({ maxSize: cacheSize || DEFAULT_CACHE_SIZE })
     this.builtins = builtins
     this.linkSourceMaps = linkSourceMaps
     this.defaultType = defaultType
@@ -78,7 +82,7 @@ class ScriptLinker {
       await m.refresh()
       return m
     } catch (err) {
-      this.modules.delete(filename)
+      this.modules.delete(ufname)
       throw err
     }
   }
@@ -115,7 +119,7 @@ class ScriptLinker {
         }
       }, function (err, res) {
         if (err) return reject(err)
-        resolve(res)
+        resolve((res) ? unixify(res) : res)
       })
     })
   }
@@ -185,7 +189,7 @@ class ScriptLinker {
     function defineModule () {
       function Module (id = '', parent) {
         this.id = id
-        this.path = path.dirname(id) // TODO: always use "posix" paths
+        this.path = unixify(path.dirname(id))
         this.exports = {}
         this.filename = null
         this.loaded = false
