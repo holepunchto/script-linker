@@ -1,10 +1,10 @@
 // tests script linker with a custom fs interface
-import test from 'brittle'
-import ScriptLinker from '../index.js'
 import fs from 'fs/promises'
 import path from 'path'
 import url from 'url'
-import unixify from '../lib/unixify.js'
+import test from 'brittle'
+import unixresolve from 'unix-path-resolve'
+import ScriptLinker from '../index.js'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const dirasobj = await dir2obj(path.join(__dirname, 'fixtures'))
@@ -28,15 +28,16 @@ test('(cjs) it resolves module', async ({ is }) => {
     './fixtures/cjs/lib/dep-a.js',
     __dirname
   )
-  is(mpath, unixify(path.resolve(__dirname, './fixtures/cjs/lib/dep-a.js')))
+  is(mpath, unixresolve(__dirname, './fixtures/cjs/lib/dep-a.js'))
 })
 
 test('(cjs) it loads module', async ({ is, ok }) => {
   const sl = scriptlinker()
   const fpath = path.resolve(__dirname, './fixtures/cjs/index.js')
   const mod = await sl.load(fpath)
-  is(mod.filename, unixify(fpath))
-  is(mod.dirname, path.dirname(unixify(fpath)))
+  const pj = await sl.findPackageJSON(unixresolve(fpath))
+  is(mod.filename, unixresolve(fpath))
+  is(mod.dirname, unixresolve(fpath, '..'))
   is(mod.builtin, false)
   is(mod.type, 'commonjs')
   is(mod.package.name, (await sl.findPackageJSON(fpath)).name)
@@ -81,15 +82,15 @@ test('(esm) it resolves module', async ({ is }) => {
     './fixtures/esm/lib/dep-a.js',
     __dirname
   )
-  is(mpath, unixify(path.resolve(__dirname, './fixtures/esm/lib/dep-a.js')))
+  is(mpath, unixresolve(path.resolve(__dirname, './fixtures/esm/lib/dep-a.js')))
 })
 
 test('(esm) it loads module', async ({ is, ok }) => {
   const sl = scriptlinker()
   const fpath = path.resolve(__dirname, './fixtures/esm/index.js')
   const mod = await sl.load(fpath)
-  is(mod.filename, unixify(fpath))
-  is(mod.dirname, path.dirname(unixify(fpath)))
+  is(mod.filename, unixresolve(fpath))
+  is(mod.dirname, path.dirname(unixresolve(fpath)))
   is(mod.builtin, false)
   is(mod.type, 'module')
   is(mod.package.name, (await sl.findPackageJSON(fpath)).name)
@@ -135,14 +136,14 @@ async function dir2obj (dirname, o = {}) {
     const np = path.join(dirname, p)
     const stat = await fs.stat(np)
     if (stat.isDirectory()) await dir2obj(np, o) // mutates o
-    else oset(o, unixify(np).split('/').filter(Boolean), (await fs.readFile(np)).toString())
+    else oset(o, unixresolve('/', np).split('/').filter(Boolean), (await fs.readFile(np)).toString())
   }
   return o
 }
 
 function readFile (o) {
   return async function (path) {
-    return oget(o, unixify(path).split('/').filter(Boolean))
+    return oget(o, unixresolve('/', path).split('/').filter(Boolean))
   }
 }
 
