@@ -4,7 +4,7 @@ const resolveModule = require('resolve')
 const b4a = require('b4a')
 const path = require('path')
 const Module = require('module')
-const unixify = require('./lib/unixify.js')
+const unixresolve = require('unix-path-resolve')
 const Xcache = require('xache')
 
 const DEFAULT_CACHE_SIZE = 500
@@ -54,7 +54,6 @@ class ScriptLinker {
 
   async findPackageJSON (filename, { directory = false } = {}) {
     let dirname = directory ? filename : path.dirname(filename)
-
     while (true) {
       try {
         const src = await this._userReadFile(path.join(dirname, 'package.json'))
@@ -68,7 +67,7 @@ class ScriptLinker {
   }
 
   async load (filename, opts) {
-    let m = this.modules.get(filename)
+    let m = this.modules.get(unixresolve(filename))
 
     if (m) {
       await m.refresh()
@@ -119,7 +118,7 @@ class ScriptLinker {
         }
       }, function (err, res) {
         if (err) return reject(err)
-        resolve(unixify(res))
+        resolve(unixresolve(res))
       })
     })
   }
@@ -189,7 +188,7 @@ class ScriptLinker {
     function defineModule () {
       function Module (id = '', parent) {
         this.id = id
-        this.path = unixify(path.dirname(id))
+        this.path = (id === '/') ? id : unixresolve(id, '..')
         this.exports = {}
         this.filename = null
         this.loaded = false
