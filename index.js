@@ -22,7 +22,11 @@ const defaultBuiltins = {
 }
 
 class ScriptLinker {
+<<<<<<< HEAD
   constructor ({ map = defaultMap, builtins = defaultBuiltins, linkSourceMaps = true, defaultType = 'commonjs', stat, readFile, isFile, isDirectory, cacheSize }) {
+=======
+  constructor ({ map = defaultMap, builtins = defaultBuiltins, linkSourceMaps = true, stat, readFile, isFile, isDirectory, cacheSize }) {
+>>>>>>> 18482d51e3d76cee081254cd2cebdabe0c0d6a84
     this.map = map
     this.modules = new Xcache({ maxSize: cacheSize || DEFAULT_CACHE_SIZE })
     this.builtins = builtins
@@ -69,7 +73,11 @@ class ScriptLinker {
     }
   }
 
+<<<<<<< HEAD
   async load (filename, opts) {
+=======
+  async load (filename) {
+>>>>>>> 18482d51e3d76cee081254cd2cebdabe0c0d6a84
     let m = this.modules.get(unixresolve(filename))
 
     if (m) {
@@ -77,7 +85,11 @@ class ScriptLinker {
       return m
     }
 
+<<<<<<< HEAD
     m = new Mod(this, filename, opts)
+=======
+    m = new Mod(this, filename)
+>>>>>>> 18482d51e3d76cee081254cd2cebdabe0c0d6a84
     this.modules.set(m.filename, m)
 
     try {
