@@ -15,7 +15,7 @@ const defaultBackend = {
   }
 }
 
-async function e2e ({ entrypoint, root, listeners, linker, backend } = {}) {
+async function e2e ({ entrypoint, listeners, linker, backend } = {}) {
   if (!isMainThread) return
   if (!entrypoint) throw new Error('Must pass entrypoint')
 
@@ -36,7 +36,7 @@ async function e2e ({ entrypoint, root, listeners, linker, backend } = {}) {
   listeners = { ...defaultListeners, ...listeners }
 
   const worker = new Worker(path.join(__dirname, './worker.js'), {
-    workerData: { entrypoint, root, type }
+    workerData: { entrypoint, type }
   })
 
   const rpc = new TRPC(worker)
