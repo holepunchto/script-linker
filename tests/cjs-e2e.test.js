@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* (in the matrix) this file is loaded by script-linker in worker */
 const path = require('path')
 const test = require('brittle')
@@ -119,7 +118,7 @@ test('it should support custom resolveSync', ({ is, teardown }) => {
   const opts = {
     ..._opts,
     resolveSync (...args) {
-      const [_, ...rest] = args.reverse() // eslint-disable-line
+      const [_, ...rest] = args.reverse() // eslint-disable-line:
       return require.resolve(path.join(...rest))
     }
   }
@@ -127,25 +126,3 @@ test('it should support custom resolveSync', ({ is, teardown }) => {
   const myrequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
   is(myrequire('./cjs-with-exports'), 'an export')
 })
-=======
-const path = require('path')
-const test = require('brittle')
-const e2e = require('./helpers/e2e')
-e2e({ entrypoint: __filename, root: path.join(__dirname, 'fixtures') })
-
-module.exports = async function ({ loader }) {
-  test('it should require cjs modules from path to dir', ({ is }) => {
-    const exp = loader('./fixtures/cjs-with-exports')
-    is(exp, 'an export')
-  })
-
-  test('it should require cjs modules from path to file', ({ is }) => {
-    const exp = loader('./fixtures/cjs-with-exports/index.js')
-    is(exp, 'an export')
-  })
-
-  test('it should throw requiring esm modules', ({ exception }) => {
-    exception(() => loader('./fixtures/esm-with-exports/index.js'))
-  })
-}
->>>>>>> 18482d51e3d76cee081254cd2cebdabe0c0d6a84
