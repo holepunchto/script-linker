@@ -15,10 +15,7 @@ async function main () {
   const linker = ScriptLinker.runtime(opts)
   linker._rpc = rpc // lets caller rebuild runtime
   linker._opts = opts // lets caller selectively overwrite def runtime opts
-  const loader = (type === 'commonjs')
-    ? linker.createRequire(entrypoint)
-    : linker.createImport(entrypoint, (x) => import(x))
-  await loader(entrypoint) // add bootstrap method with these four
+  await linker.bootstrap({ entrypoint, type })
 }
 
 main()

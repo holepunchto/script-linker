@@ -171,6 +171,14 @@ class ScriptLinker {
         function require (request, opts) {
           return parent.require(request, opts)
         }
+      },
+      bootstrap ({ entrypoint, type } = {}) {
+        if (!entrypoint) throw new Error('Must pass entrypoint')
+        if (!type) throw new Error('Must pass type')
+        const loader = (type === 'commonjs')
+          ? sl.createRequire(entrypoint)
+          : sl.createImport(entrypoint, (p) => import(p))
+        return loader(entrypoint)
       }
     }
 
