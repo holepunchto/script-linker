@@ -15,6 +15,9 @@ const defaultBuiltins = {
   },
   get (ns) {
     return require(ns)
+  },
+  keys () {
+    return Module.builtinModules
   }
 }
 
@@ -123,7 +126,7 @@ class ScriptLinker {
     })
   }
 
-  static preload (opts) {
+  static runtime (opts) {
     const {
       map = defaultMap,
       builtins = defaultBuiltins,
@@ -202,7 +205,7 @@ class ScriptLinker {
       Module.Module = Module
       Module.syncBuiltinESMExports = () => {} // noop for now
       Module.globalPaths = []
-      Module.builtinModules = [] // not populated atm but could be if we need to ...
+      Module.builtinModules = [...defaultBuiltins.keys()]
 
       Module.createRequire = function (filename) {
         return sl.createRequire(filename, null)
