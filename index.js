@@ -15,11 +15,12 @@ const defaultBuiltins = {
 }
 
 class ScriptLinker {
-  constructor ({ map = defaultMap, builtins = defaultBuiltins, linkSourceMaps = true, stat, readFile, isFile, isDirectory }) {
+  constructor ({ map = defaultMap, builtins = defaultBuiltins, linkSourceMaps = true, defaultType = 'commonjs', stat, readFile, isFile, isDirectory }) {
     this.map = map
     this.modules = new Map()
     this.builtins = builtins
     this.linkSourceMaps = linkSourceMaps
+    this.defaultType = defaultType
 
     this._userStat = stat || null
     this._userReadFile = readFile || null
@@ -62,7 +63,7 @@ class ScriptLinker {
     }
   }
 
-  async load (filename) {
+  async load (filename, opts) {
     let m = this.modules.get(filename)
 
     if (m) {
@@ -70,7 +71,7 @@ class ScriptLinker {
       return m
     }
 
-    m = new Mod(this, filename)
+    m = new Mod(this, filename, opts)
     this.modules.set(filename, m)
 
     try {
