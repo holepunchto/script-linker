@@ -4,6 +4,7 @@ const test = require('brittle')
 const fs = require('fs')
 const mod = require('module')
 const ScriptLinker = require('../')
+const { ok } = require('assert')
 
 const linker = global[Symbol.for('scriptlinker')]
 const { _opts } = linker
@@ -40,7 +41,7 @@ test('map should be able to rewrite urls', ({ is, not, teardown }) => {
   is(xformed.replace('cjs-with-imports-and-exports', 'cjs-with-exports'), original)
 })
 
-test('by default it should resolve builtin modules', ({ is, fail, teardown }) => {
+test('by default it should resolve builtin modules', ({ is, ok, fail, teardown }) => {
   teardown(() => { global[Symbol.for('scriptlinker')] = linker })
   const opts = {
     ..._opts,
@@ -49,6 +50,7 @@ test('by default it should resolve builtin modules', ({ is, fail, teardown }) =>
         return mod.builtinModules.includes(x)
       },
       get (x) {
+        ok(x)
         return require(x)
       },
       keys () {
@@ -76,7 +78,8 @@ test('it should allow custom builtin module resolution', ({ is, fail, teardown, 
       },
       get () {
         return prerequired
-      }
+      },
+      keys () { return [] }
     }
   }
   const runtime = ScriptLinker.runtime(opts)
@@ -118,7 +121,7 @@ test('it should support custom resolveSync', ({ is, teardown }) => {
   const opts = {
     ..._opts,
     resolveSync (...args) {
-      const [_, ...rest] = args.reverse() // eslint-disable-line:
+      const [_, ...rest] = args.reverse() // eslint-disable-line
       return require.resolve(path.join(...rest))
     }
   }

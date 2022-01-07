@@ -12,13 +12,13 @@ const scriptlinker = scriptlinkerFactory(dirasobj)
 
 test('(cjs) it finds package.json by filename', async ({ is }) => {
   const sl = scriptlinker()
-  const pj = await sl.findPackageJSON(path.resolve(__dirname, './fixtures/cjs/index.js'))
+  const pj = await sl.findPackageJSON(unixresolve(__dirname, './fixtures/cjs/index.js'))
   is(pj.name, 'commonjs-app')
 })
 
 test('(cjs) it finds package.json by directory name', async ({ is }) => {
   const sl = scriptlinker()
-  const pj = await sl.findPackageJSON(path.resolve(__dirname, './fixtures/cjs/'), { directory: true })
+  const pj = await sl.findPackageJSON(unixresolve(__dirname, './fixtures/cjs/'), { directory: true })
   is(pj.name, 'commonjs-app')
 })
 
@@ -33,9 +33,8 @@ test('(cjs) it resolves module', async ({ is }) => {
 
 test('(cjs) it loads module', async ({ is, ok }) => {
   const sl = scriptlinker()
-  const fpath = path.resolve(__dirname, './fixtures/cjs/index.js')
+  const fpath = unixresolve(__dirname, './fixtures/cjs/index.js')
   const mod = await sl.load(fpath)
-  const pj = await sl.findPackageJSON(unixresolve(fpath))
   is(mod.filename, unixresolve(fpath))
   is(mod.dirname, unixresolve(fpath, '..'))
   is(mod.builtin, false)
@@ -50,7 +49,7 @@ test('(cjs) it loads module', async ({ is, ok }) => {
 
 test('(cjs) it converts to ESM', async ({ ok }) => {
   const sl = scriptlinker()
-  const fpath = path.resolve(__dirname, './fixtures/cjs/index.js')
+  const fpath = unixresolve(__dirname, './fixtures/cjs/index.js')
   const mod = await sl.load(fpath)
   const asESM = await mod.toESM()
   ok(asESM) // TODO write to disk and reimport
@@ -58,7 +57,7 @@ test('(cjs) it converts to ESM', async ({ ok }) => {
 
 test('(cjs) it converts to JSON if .json', async ({ is }) => {
   const sl = scriptlinker()
-  const fpath = path.resolve(__dirname, './fixtures/cjs/package.json')
+  const fpath = unixresolve(__dirname, './fixtures/cjs/package.json')
   const mod = await sl.load(fpath)
   const json = await mod.toCJS()
   is(json, (await fs.readFile(fpath)).toString())
@@ -66,13 +65,13 @@ test('(cjs) it converts to JSON if .json', async ({ is }) => {
 
 test('(esm) it finds package.json by filename', async ({ is }) => {
   const sl = scriptlinker()
-  const pj = await sl.findPackageJSON(path.resolve(__dirname, './fixtures/esm/index.js'))
+  const pj = await sl.findPackageJSON(unixresolve(__dirname, './fixtures/esm/index.js'))
   is(pj.name, 'esm-app')
 })
 
 test('(esm) it finds package.json by directory name', async ({ is }) => {
   const sl = scriptlinker()
-  const pj = await sl.findPackageJSON(path.resolve(__dirname, './fixtures/esm/'), { directory: true })
+  const pj = await sl.findPackageJSON(unixresolve(__dirname, './fixtures/esm/'), { directory: true })
   is(pj.name, 'esm-app')
 })
 
@@ -82,12 +81,12 @@ test('(esm) it resolves module', async ({ is }) => {
     './fixtures/esm/lib/dep-a.js',
     __dirname
   )
-  is(mpath, unixresolve(path.resolve(__dirname, './fixtures/esm/lib/dep-a.js')))
+  is(mpath, unixresolve(unixresolve(__dirname, './fixtures/esm/lib/dep-a.js')))
 })
 
 test('(esm) it loads module', async ({ is, ok }) => {
   const sl = scriptlinker()
-  const fpath = path.resolve(__dirname, './fixtures/esm/index.js')
+  const fpath = unixresolve(__dirname, './fixtures/esm/index.js')
   const mod = await sl.load(fpath)
   is(mod.filename, unixresolve(fpath))
   is(mod.dirname, path.dirname(unixresolve(fpath)))
@@ -102,14 +101,14 @@ test('(esm) it loads module', async ({ is, ok }) => {
 
 test('(esm) it throws converting esm -> cjs', async ({ exception }) => {
   const sl = scriptlinker()
-  const fpath = path.resolve(__dirname, './fixtures/esm/index.js')
+  const fpath = unixresolve(__dirname, './fixtures/esm/index.js')
   const mod = await sl.load(fpath)
   exception(mod.toCJS.bind(mod))
 })
 
 test('(esm) it does not try to resolve custom protocol paths', async ({ is, ok }) => {
   const sl = scriptlinker()
-  const fpath = path.resolve(__dirname, './fixtures/esm-custom-scheme/index.js')
+  const fpath = unixresolve(__dirname, './fixtures/esm-custom-scheme/index.js')
   const mod = await sl.load(fpath)
   is(mod.resolutions.length, 0)
   const esm = await mod.toESM()
