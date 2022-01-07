@@ -4,6 +4,10 @@ const resolveModule = require('resolve')
 const b4a = require('b4a')
 const path = require('path')
 const Module = require('module')
+const unixresolve = require('unix-path-resolve')
+const Xcache = require('xache')
+
+const DEFAULT_CACHE_SIZE = 512
 
 const defaultBuiltins = {
   has (ns) {
@@ -11,13 +15,16 @@ const defaultBuiltins = {
   },
   get (ns) {
     return require(ns)
+  },
+  keys () {
+    return Module.builtinModules
   }
 }
 
 class ScriptLinker {
-  constructor ({ map = defaultMap, builtins = defaultBuiltins, linkSourceMaps = true, defaultType = 'commonjs', stat, readFile, isFile, isDirectory }) {
+  constructor ({ map = defaultMap, builtins = defaultBuiltins, linkSourceMaps = true, defaultType = 'commonjs', stat, readFile, isFile, isDirectory, cacheSize }) {
     this.map = map
-    this.modules = new Map()
+    this.modules = new Xcache({ maxSize: cacheSize || DEFAULT_CACHE_SIZE })
     this.builtins = builtins
     this.linkSourceMaps = linkSourceMaps
     this.defaultType = defaultType
@@ -49,14 +56,13 @@ class ScriptLinker {
   }
 
   async findPackageJSON (filename, { directory = false } = {}) {
-    let dirname = directory ? filename : path.dirname(filename)
-
+    let dirname = directory ? unixresolve(filename) : unixresolve(filename, '..')
     while (true) {
       try {
-        const src = await this._userReadFile(path.join(dirname, 'package.json'))
+        const src = await this._userReadFile(unixresolve(dirname, 'package.json'))
         return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
       } catch {
-        const next = path.join(dirname, '..')
+        const next = unixresolve(dirname, '..')
         if (next === dirname) return null
         dirname = next
       }
@@ -64,7 +70,7 @@ class ScriptLinker {
   }
 
   async load (filename, opts) {
-    let m = this.modules.get(filename)
+    let m = this.modules.get(unixresolve(filename))
 
     if (m) {
       await m.refresh()
@@ -72,13 +78,13 @@ class ScriptLinker {
     }
 
     m = new Mod(this, filename, opts)
-    this.modules.set(filename, m)
+    this.modules.set(m.filename, m)
 
     try {
       await m.refresh()
       return m
     } catch (err) {
-      this.modules.delete(filename)
+      this.modules.delete(m.filename)
       throw err
     }
   }
@@ -115,12 +121,12 @@ class ScriptLinker {
         }
       }, function (err, res) {
         if (err) return reject(err)
-        resolve(res)
+        resolve(unixresolve(res))
       })
     })
   }
 
-  static preload (opts) {
+  static runtime (opts) {
     const {
       map = defaultMap,
       builtins = defaultBuiltins,
@@ -138,6 +144,7 @@ class ScriptLinker {
         const dirname = path.dirname(filename)
         return (req) => {
           try {
+            if (isCustomScheme(req)) return doImport(req)
             const r = resolveImport(dirname, req)
             return doImport(r)
           } catch {
@@ -165,6 +172,14 @@ class ScriptLinker {
         function require (request, opts) {
           return parent.require(request, opts)
         }
+      },
+      bootstrap (entrypoint, { type } = {}) {
+        if (!entrypoint) throw new Error('Must pass entrypoint')
+        if (!type) throw new Error('Must pass type')
+        const loader = (type === 'commonjs')
+          ? sl.createRequire(entrypoint)
+          : sl.createImport(entrypoint, (p) => import(p))
+        return loader(entrypoint)
       }
     }
 
@@ -185,7 +200,7 @@ class ScriptLinker {
     function defineModule () {
       function Module (id = '', parent) {
         this.id = id
-        this.path = path.dirname(id) // TODO: always use "posix" paths
+        this.path = (id === '/') ? id : unixresolve(id, '..')
         this.exports = {}
         this.filename = null
         this.loaded = false
@@ -199,7 +214,7 @@ class ScriptLinker {
       Module.Module = Module
       Module.syncBuiltinESMExports = () => {} // noop for now
       Module.globalPaths = []
-      Module.builtinModules = [] // not populated atm but could be if we need to ...
+      Module.builtinModules = [...builtins.keys()]
 
       Module.createRequire = function (filename) {
         return sl.createRequire(filename, null)
@@ -283,4 +298,8 @@ function getPath (o, path) {
 
 function defaultMap (id, { isImport, isBuiltin, isSourceMap }) {
   return (isImport ? 'module://' : 'commonjs://') + (isBuiltin ? '' : ScriptLinker.defaultUserspace) + id + (isSourceMap ? '.map' : '')
+}
+
+function isCustomScheme (str) {
+  return /^[a-z][a-z0-9]+:/i.test(str)
 }
