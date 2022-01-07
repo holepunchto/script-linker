@@ -7,7 +7,7 @@ const Module = require('module')
 const unixresolve = require('unix-path-resolve')
 const Xcache = require('xache')
 
-const DEFAULT_CACHE_SIZE = 500
+const DEFAULT_CACHE_SIZE = 512
 
 const defaultBuiltins = {
   has (ns) {
@@ -56,13 +56,13 @@ class ScriptLinker {
   }
 
   async findPackageJSON (filename, { directory = false } = {}) {
-    let dirname = directory ? filename : path.dirname(filename)
+    let dirname = directory ? unixresolve(filename) : unixresolve(filename, '..')
     while (true) {
       try {
-        const src = await this._userReadFile(path.join(dirname, 'package.json'))
+        const src = await this._userReadFile(unixresolve(dirname, 'package.json'))
         return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
       } catch {
-        const next = path.join(dirname, '..')
+        const next = unixresolve(dirname, '..')
         if (next === dirname) return null
         dirname = next
       }
@@ -144,6 +144,7 @@ class ScriptLinker {
         const dirname = path.dirname(filename)
         return (req) => {
           try {
+            if (isCustomScheme(req)) return Promise.reject(new Error(`Cannot import urls using custom schemes: ${req}`))
             const r = resolveImport(dirname, req)
             return doImport(r)
           } catch {
@@ -213,7 +214,7 @@ class ScriptLinker {
       Module.Module = Module
       Module.syncBuiltinESMExports = () => {} // noop for now
       Module.globalPaths = []
-      Module.builtinModules = [...defaultBuiltins.keys()]
+      Module.builtinModules = [...builtins.keys()]
 
       Module.createRequire = function (filename) {
         return sl.createRequire(filename, null)
@@ -297,4 +298,8 @@ function getPath (o, path) {
 
 function defaultMap (id, { isImport, isBuiltin, isSourceMap }) {
   return (isImport ? 'module://' : 'commonjs://') + (isBuiltin ? '' : ScriptLinker.defaultUserspace) + id + (isSourceMap ? '.map' : '')
+}
+
+function isCustomScheme (str) {
+  return /^[a-z][a-z0-9]+:/i.test(str)
 }
