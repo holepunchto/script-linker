@@ -15,7 +15,7 @@ async function main () {
   const linker = ScriptLinker.runtime(opts)
   linker._rpc = rpc // lets caller rebuild runtime
   linker._opts = opts // lets caller selectively overwrite def runtime opts
-  await linker.bootstrap({ entrypoint, type })
+  await linker.bootstrap(entrypoint, { type })
 }
 
 main()
