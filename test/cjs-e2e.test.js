@@ -4,7 +4,6 @@ const test = require('brittle')
 const fs = require('fs')
 const mod = require('module')
 const ScriptLinker = require('../')
-const { ok } = require('assert')
 
 const linker = global[Symbol.for('scriptlinker')]
 const { _opts } = linker

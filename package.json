@@ -6,7 +6,7 @@
   "author": "Holepunch",
   "license": "MIT",
   "scripts": {
-    "test": "brittle test/*.test.*js",
+    "test": "npm run lint && brittle test/*.test.*js",
     "lint": "standardx"
   },
   "dependencies": {
