@@ -144,7 +144,7 @@ class ScriptLinker {
         const dirname = path.dirname(filename)
         return (req) => {
           try {
-            if (isCustomScheme(req)) return Promise.reject(new Error(`Cannot import urls using custom schemes: ${req}`))
+            if (isCustomScheme(req)) return doImport(req)
             const r = resolveImport(dirname, req)
             return doImport(r)
           } catch {
