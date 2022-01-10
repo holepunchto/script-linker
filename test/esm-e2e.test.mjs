@@ -21,8 +21,8 @@ test('linker should be on the global object', ({ ok }) => {
 })
 
 test('linker can createImport', async ({ is }) => {
-  const myimport = linker.createImport(path.join(__dirname, './fixtures/esm-with-exports'), doImport)
-  const { default: exp } = await myimport('./esm-with-exports/index.js')
+  const myImport = linker.createImport(path.join(__dirname, './fixtures/esm-with-exports'), doImport)
+  const { default: exp } = await myImport('./esm-with-exports/index.js')
   is(exp, 'an export')
 })
 
@@ -37,8 +37,8 @@ test('map should be able to rewrite urls', async ({ is, not, teardown }) => {
     }
   }
   const runtime = ScriptLinker.runtime(opts)
-  const myimport = runtime.createImport(path.join(__dirname, './fixtures/esm-with-exports'), doImport)
-  const { default: exp } = await myimport('./esm-with-exports')
+  const myImport = runtime.createImport(path.join(__dirname, './fixtures/esm-with-exports'), doImport)
+  const { default: exp } = await myImport('./esm-with-exports')
   not(exp, 'an export')
   is(exp(0), 1)
 })
@@ -85,23 +85,23 @@ test('it should allow custom builtin module resolution', async ({ is, fail, tear
     }
   }
   const runtime = ScriptLinker.runtime(opts)
-  const myimport = runtime.createImport(path.join(__dirname, './fixtures/esm-with-exports'), doImport)
-  const imported = await myimport('./esm-with-exports')
+  const myImport = runtime.createImport(path.join(__dirname, './fixtures/esm-with-exports'), doImport)
+  const imported = await myImport('./esm-with-exports')
   const { default: exp } = imported
   is(exp, 'an export')
-  exception(() => myimport('fs'))
+  exception(() => myImport('fs'))
 })
 
 test('it should support custom source compilation', async ({ is, teardown }) => {
   teardown(() => { global[Symbol.for('scriptlinker')] = linker })
   const runtime = ScriptLinker.runtime(_opts)
-  const myimport = runtime.createImport(path.join(__dirname, './fixtures/esm-with-exports'), (r) => {
+  const myImport = runtime.createImport(path.join(__dirname, './fixtures/esm-with-exports'), (r) => {
     return fs.readFile(r)
       .then((buf) => buf.toString())
       .then((src) => encodeURIComponent(src.replace('an export', 'AN EXPORT')))
       .then((src) => import('data:text/javascript,' + src))
   })
-  const { default: exp } = await myimport('./esm-with-exports')
+  const { default: exp } = await myImport('./esm-with-exports')
   is(exp, 'AN EXPORT')
 })
 
@@ -114,8 +114,8 @@ test('it should support custom getSync (noop)', async ({ is, teardown, fail }) =
     }
   }
   const runtime = ScriptLinker.runtime(opts)
-  const myimport = runtime.createImport(path.join(__dirname, './fixtures/esm-with-exports'), doImport)
-  const { default: exp } = await myimport('./esm-with-exports')
+  const myImport = runtime.createImport(path.join(__dirname, './fixtures/esm-with-exports'), doImport)
+  const { default: exp } = await myImport('./esm-with-exports')
   is(exp, 'an export')
 })
 
@@ -129,7 +129,7 @@ test('it should support custom resolveSync', async ({ is, teardown }) => {
     }
   }
   const runtime = ScriptLinker.runtime(opts)
-  const myimport = runtime.createImport(path.join(__dirname, './fixtures/esm-with-exports'), doImport)
-  const { default: exp } = await myimport('./esm-with-exports')
+  const myImport = runtime.createImport(path.join(__dirname, './fixtures/esm-with-exports'), doImport)
+  const { default: exp } = await myImport('./esm-with-exports')
   is(exp, 'an export')
 })

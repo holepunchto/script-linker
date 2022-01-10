@@ -13,9 +13,9 @@ test('linker should be on the global object', ({ ok }) => {
 })
 
 test('linker can createRequire', ({ is }) => {
-  const myrequire = linker.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
-  is(myrequire('./cjs-with-exports'), 'an export')
-  is(myrequire('./cjs-with-exports/index.js'), 'an export')
+  const myRequire = linker.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
+  is(myRequire('./cjs-with-exports'), 'an export')
+  is(myRequire('./cjs-with-exports/index.js'), 'an export')
 })
 
 test('map should be able to rewrite urls', ({ is, not, teardown }) => {
@@ -34,9 +34,9 @@ test('map should be able to rewrite urls', ({ is, not, teardown }) => {
     }
   }
   const runtime = ScriptLinker.runtime(opts)
-  const myrequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
-  not(myrequire('./cjs-with-exports'), 'an export')
-  is(myrequire('./cjs-with-exports')(0), 1)
+  const myRequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
+  not(myRequire('./cjs-with-exports'), 'an export')
+  is(myRequire('./cjs-with-exports')(0), 1)
   is(xformed.replace('cjs-with-imports-and-exports', 'cjs-with-exports'), original)
 })
 
@@ -82,9 +82,9 @@ test('it should allow custom builtin module resolution', ({ is, fail, teardown, 
     }
   }
   const runtime = ScriptLinker.runtime(opts)
-  const myrequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
-  is(myrequire('./cjs-with-exports'), 'an export')
-  exception(() => myrequire('fs'))
+  const myRequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
+  is(myRequire('./cjs-with-exports'), 'an export')
+  exception(() => myRequire('fs'))
 })
 
 test('it should support custom source compilation', ({ is, fail, teardown, exception }) => {
@@ -98,8 +98,8 @@ test('it should support custom source compilation', ({ is, fail, teardown, excep
     }
   }
   const runtime = ScriptLinker.runtime(opts)
-  const myrequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
-  is(myrequire('./cjs-with-exports'), 'AN EXPORT')
+  const myRequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
+  is(myRequire('./cjs-with-exports'), 'AN EXPORT')
 })
 
 test('it should support custom getSync', ({ is, teardown }) => {
@@ -111,8 +111,8 @@ test('it should support custom getSync', ({ is, teardown }) => {
     }
   }
   const runtime = ScriptLinker.runtime(opts)
-  const myrequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
-  is(myrequire('./cjs-with-exports'), 'an export')
+  const myRequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
+  is(myRequire('./cjs-with-exports'), 'an export')
 })
 
 test('it should support custom resolveSync', ({ is, teardown }) => {
@@ -125,6 +125,6 @@ test('it should support custom resolveSync', ({ is, teardown }) => {
     }
   }
   const runtime = ScriptLinker.runtime(opts)
-  const myrequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
-  is(myrequire('./cjs-with-exports'), 'an export')
+  const myRequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
+  is(myRequire('./cjs-with-exports'), 'an export')
 })
