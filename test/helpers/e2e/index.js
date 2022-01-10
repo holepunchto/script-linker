@@ -3,6 +3,7 @@ const fs = require('fs/promises')
 const path = require('path')
 const TRPC = require('thread-rpc')
 const ScriptLinker = require('../../../index.js')
+const unixresolve = require('unix-path-resolve')
 
 const defaultBackend = {
   readFile: fs.readFile,
@@ -43,6 +44,8 @@ async function e2e ({ entrypoint, listeners, linker, backend } = {}) {
   for (const listener of Object.entries(listeners)) {
     rpc.respond(...listener)
   }
+
+  return { linker, worker, rpc }
 }
 
 module.exports = e2e
