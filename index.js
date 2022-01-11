@@ -70,7 +70,7 @@ class ScriptLinker {
   }
 
   async load (filename, opts) {
-    let m = this.modules.get(unixresolve(filename))
+    let m = this.modules.get(filename)
 
     if (m) {
       await m.refresh()
@@ -121,7 +121,7 @@ class ScriptLinker {
         }
       }, function (err, res) {
         if (err) return reject(err)
-        resolve(unixresolve(res))
+        resolve((self.builtins.has(res) ? res : unixresolve(res)))
       })
     })
   }
