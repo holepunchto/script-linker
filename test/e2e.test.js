@@ -10,4 +10,3 @@ e2e(esm)
 e2e({ ...esm, backend: minimal })
 e2e(cjs)
 e2e({ ...cjs, backend: minimal })
-
