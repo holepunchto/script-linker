@@ -12,10 +12,7 @@ test('it should load plain vanilla js modules', async ({ is }) => {
     resolveSync() { return `data:text/javascript,${encodeURIComponent(esm)}` },
     map (x) { return x }
   })
-  const myImport = runtime.createImport(path.resolve(__dirname, '../node_modules/jquery'), (s) => {
-    console.log('import')
-    return import(s)
-  })
+  const myImport = runtime.createImport(path.resolve(__dirname, '../node_modules/jquery'), (s) => import(s))
   const { default: $ } = await myImport('jquery')
   const dom = new JSDOM(`<!DOCTYPE html><p id="message">It worked!</p>`)
   const els = $(dom.window)('#message')
