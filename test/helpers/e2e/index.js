@@ -43,6 +43,8 @@ async function e2e ({ entrypoint, listeners, linker, backend } = {}) {
   for (const listener of Object.entries(listeners)) {
     rpc.respond(...listener)
   }
+
+  return { linker, worker, rpc }
 }
 
 module.exports = e2e

@@ -5,8 +5,44 @@ import path from 'path'
 import url from 'url'
 import unixresolve from 'unix-path-resolve'
 import ScriptLinker from '../index.js'
+import { Module } from 'module'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
+
+test('it resolves builtins', async ({ is }) => {
+  const sl = scriptlinker()
+  const mpath = await sl.resolve('events')
+  is(mpath, 'events')
+})
+
+test('it loads builtins', async ({ is }) => {
+  const sl = scriptlinker()
+  const mod = await sl.load('events')
+  is(mod.filename, 'events')
+  is(mod.dirname, '/')
+  is(mod.builtin, true)
+  is(mod.type, 'module')
+  is(mod.package, null)
+  is(mod.source, (`
+const mod = global[Symbol.for('scriptlinker')].require("events")
+export const once = mod.once
+export const on = mod.on
+export const getEventListeners = mod.getEventListeners
+export const EventEmitter = mod.EventEmitter
+export const usingDomains = mod.usingDomains
+export const captureRejectionSymbol = mod.captureRejectionSymbol
+export const captureRejections = mod.captureRejections
+export const errorMonitor = mod.errorMonitor
+export const defaultMaxListeners = mod.defaultMaxListeners
+export const setMaxListeners = mod.setMaxListeners
+export const init = mod.init
+export const listenerCount = mod.listenerCount
+export default mod
+  `).trim())
+  // domain mutually exclusive w brittle through uncaught exception capture callback registration,
+  // repl mutually exclusive w brittle through domain
+  for (const modName of Module.builtinModules.filter((name) => !(['domain', 'repl']).includes(name))) is((await sl.load(modName)).filename, modName)
+})
 
 test('(cjs) it finds package.json by filename', async ({ is }) => {
   const sl = scriptlinker()
@@ -20,7 +56,7 @@ test('(cjs) it finds package.json by directory name', async ({ is }) => {
   is(pj.name, 'commonjs-app')
 })
 
-test('(cjs) it resolves module', async ({ is }) => {
+test('(cjs) it resolves modules', async ({ is }) => {
   const sl = scriptlinker()
   const mpath = await sl.resolve(
     './fixtures/cjs/lib/dep-a.js',

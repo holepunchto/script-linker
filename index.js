@@ -70,7 +70,7 @@ class ScriptLinker {
   }
 
   async load (filename, opts) {
-    let m = this.modules.get(unixresolve(filename))
+    let m = this.modules.get(filename)
 
     if (m) {
       await m.refresh()
@@ -90,6 +90,7 @@ class ScriptLinker {
   }
 
   async resolve (ns, basedir, { isImport = true } = {}) {
+    if (this.builtins.has(ns)) return ns
     const self = this
 
     return new Promise((resolve, reject) => {
