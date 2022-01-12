@@ -90,6 +90,7 @@ class ScriptLinker {
   }
 
   async resolve (ns, basedir, { isImport = true } = {}) {
+    if (this.builtins.has(ns)) return ns
     const self = this
 
     return new Promise((resolve, reject) => {
@@ -121,7 +122,7 @@ class ScriptLinker {
         }
       }, function (err, res) {
         if (err) return reject(err)
-        resolve((self.builtins.has(res) ? res : unixresolve(res)))
+        resolve(unixresolve(res))
       })
     })
   }
