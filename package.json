@@ -26,6 +26,8 @@
     "@babel/eslint-parser": "^7.16.5",
     "@babel/plugin-syntax-top-level-await": "^7.14.5",
     "brittle": "^2.0.3",
+    "jquery": "^3.6.0",
+    "jsdom": "^19.0.0",
     "standardx": "^7.0.0",
     "thread-rpc": "^1.1.1"
   },

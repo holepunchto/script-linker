@@ -6,7 +6,7 @@ const test = require('brittle')
 test('it should load plain vanilla js modules', async ({ is }) => {
   const ScriptLinker = require('../')
   const linker = new ScriptLinker({ readFile: fs.readFile })
-  const mod = await linker.load(path.resolve(__dirname, '../node_modules/jquery'))
+  const mod = await linker.load(path.resolve(__dirname, '../node_modules/jquery/dist/jquery.js'))
   const esm = await mod.toESM()
   const runtime = ScriptLinker.runtime({
     resolveSync() { return `data:text/javascript,${encodeURIComponent(esm)}` },
