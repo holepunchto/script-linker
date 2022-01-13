@@ -66,7 +66,7 @@ class ScriptLinker {
         const next = unixresolve(dirname, '..')
         dirname = next
       }
-      if (src) return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
+      if (src !== null) return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
     }
   }
 
