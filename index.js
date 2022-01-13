@@ -58,14 +58,15 @@ class ScriptLinker {
   async findPackageJSON (filename, { directory = false } = {}) {
     let dirname = directory ? unixresolve(filename) : unixresolve(filename, '..')
     while (true) {
+      let src = null
       try {
-        const src = await this._userReadFile(unixresolve(dirname, 'package.json'))
-        return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
+        src = await this._userReadFile(unixresolve(dirname, 'package.json'))
       } catch {
+        if (dirname === '/') return null
         const next = unixresolve(dirname, '..')
-        if (next === dirname) return null
         dirname = next
       }
+      if (src !== null) return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
     }
   }
 
