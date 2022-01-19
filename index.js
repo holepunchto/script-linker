@@ -15,6 +15,7 @@ class ScriptLinker {
     defaultType = d.type,
     cacheSize = d.cacheSize,
     userspace = d.userspace,
+    bare = false,
     stat,
     readFile,
     isFile,
@@ -27,7 +28,9 @@ class ScriptLinker {
     this.linkSourceMaps = linkSourceMaps
     this.defaultType = defaultType
     this.userspace = userspace
+    this.bare = bare
 
+    this._ns = bare ? '' : 'global[Symbol.for(\'scriptlinker\')].'
     this._userStat = stat || null
     this._userReadFile = readFile || null
     this._userIsFile = isFile || null
