@@ -83,15 +83,20 @@ class ScriptLinker {
     }
   }
 
-  async * topologicWalk (filename, opts, visited = new Set()) {
-    const m = await this.load(filename, opts)
+  async * dependencies (filename, opts, visited = new Set(), modules = new Map(), type = null) {
+    const m = modules.get(filename) || await this.load(filename, opts)
+    modules.set(filename, m)
 
-    yield m
+    const isImport = (type || m.type) === 'module'
+    const id = (isImport ? 'i' : 'c') + filename
+
+    if (visited.has(id)) return
+    visited.add(id)
+
+    yield { isImport, module: m }
 
     for (const r of m.resolutions) {
-      if (!r.output || visited.has(r.output)) continue
-      visited.add(filename)
-      yield * this.topologicWalk(r.output, opts, visited)
+      if (r.output) yield * this.dependencies(r.output, opts, visited, modules, r.isImport ? 'module' : 'commonjs')
     }
   }
 
@@ -159,22 +164,26 @@ class ScriptLinker {
     })
   }
 
-  async bundle (filename) {
+  async bundle (filename, { builtins } = {}) {
     if (!this.bare) throw new Error('Bundling only works in bare mode')
 
-    const cjs = []
-
+    let cjs = []
     let esm = ''
     let main = null
     let out = '{\n'
 
-    for await (const mod of this.topologicWalk(filename)) {
-      if (main === null) main = mod
-      if (esm) esm += ',\n'
-      esm += '    ' + JSON.stringify('bundle:' + mod.filename) + ': '
-      esm += JSON.stringify('data:application/javascript;base64,' + Buffer.from(mod.toESM()).toString('base64'))
-      if (mod.type !== 'module') cjs.push(mod)
+    for await (const { isImport, module } of this.dependencies(filename)) {
+      if (main === null) main = module
+      if (isImport === false || module.builtin || module.type === 'commonjs') {
+        cjs.push(module)
+      }
+      if (isImport) {
+        if (esm) esm += ',\n'
+        esm += '    ' + JSON.stringify('bundle:' + module.filename) + ': '
+        esm += JSON.stringify('data:application/javascript;base64,' + Buffer.from(module.toESM()).toString('base64'))
+      }
     }
+
     if (esm) esm += '\n'
 
     if (esm) {
@@ -187,9 +196,11 @@ class ScriptLinker {
     }
 
     if (cjs.length) {
+      cjs = [...new Set(cjs)] // no dups
       out += 'require.cache = {\n'
       for (let i = cjs.length - 1; i >= 0; i--) {
-        out += '  ' + JSON.stringify(cjs[i].filename) + ': { exports: {} }' + (i === 0 ? '' : ',') + '\n'
+        const e = (cjs[i].builtin && builtins) ? builtins + '.get(' + JSON.stringify(cjs[i].filename) + ')' : '{}'
+        out += '  ' + JSON.stringify(cjs[i].filename) + ': { exports: ' + e + ' }' + (i === 0 ? '' : ',') + '\n'
       }
       out += '}\n'
       out += 'require.scope = function (map, fn) {\n'
@@ -202,6 +213,7 @@ class ScriptLinker {
       out += '}\n'
       for (let i = cjs.length - 1; i >= 0; i--) {
         const mod = cjs[i]
+        if (mod.builtin) continue
         const map = mod.requireMap() || {}
         out += 'require.scope(' + JSON.stringify(map) + ', function (require, '
         out += '__filename = ' + JSON.stringify(mod.filename) + ', '
