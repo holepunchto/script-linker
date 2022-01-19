@@ -3,9 +3,10 @@ const unixresolve = require('unix-path-resolve')
 
 module.exports = function runtime ({
   map = d.map,
-  importMap = d.importMap,
+  mapImport = d.mapImport,
   builtins = d.builtins,
   compile = d.compile,
+  userspace = d.userspace,
   getSync,
   resolveSync
 }) {
@@ -17,7 +18,7 @@ module.exports = function runtime ({
     createImport (filename, doImport) {
       const dirname = filename === '/' ? '/' : unixresolve(filename, '..')
       return (req) => {
-        req = importMap(req, dirname)
+        req = mapImport(req, dirname)
         try {
           if (isCustomScheme(req)) return doImport(req)
           const r = resolveImport(dirname, req)
@@ -68,7 +69,13 @@ module.exports = function runtime ({
 
   function resolveImport (dirname, req) {
     const isBuiltin = builtins.has(req)
-    return map(isBuiltin ? req : resolveSync(req, dirname, { isImport: true }), { isImport: true, isBuiltin, isSourceMap: false })
+    return map(isBuiltin ? req : resolveSync(req, dirname, { isImport: true }), {
+      userspace,
+      isImport: true,
+      isBuiltin,
+      isSourceMap: false,
+      isConsole: false
+    })
   }
 
   function getExtension (filename) {
@@ -145,7 +152,14 @@ module.exports = function runtime ({
     }
 
     Module._getSource = function (filename, opts) {
-      return typeof (opts && opts.source) === 'string' ? opts.source : getSync(map(filename, { isImport: false, isBuiltin: false, isSourceMap: false }))
+      if (typeof (opts && opts.source) === 'string') return opts.source
+      return getSync(map(filename, {
+        userspace,
+        isImport: false,
+        isBuiltin: false,
+        isSourceMap: false,
+        isConsole: false
+      }))
     }
 
     Module.prototype._compile = function (source, filename) {

@@ -9,22 +9,24 @@ const runtime = require('./runtime')
 class ScriptLinker {
   constructor ({
     map = d.map,
-    importMap = d.importMap,
+    mapImport = d.mapImport,
     builtins = d.builtins,
     linkSourceMaps = d.linkSourceMaps,
     defaultType = d.type,
     cacheSize = d.cacheSize,
+    userspace = d.userspace,
     stat,
     readFile,
     isFile,
     isDirectory
   }) {
     this.map = map
-    this.importMap = importMap
+    this.mapImport = mapImport
     this.modules = new Xcache({ maxSize: cacheSize })
     this.builtins = builtins
     this.linkSourceMaps = linkSourceMaps
     this.defaultType = defaultType
+    this.userspace = userspace
 
     this._userStat = stat || null
     this._userReadFile = readFile || null
@@ -53,7 +55,14 @@ class ScriptLinker {
   }
 
   _mapImport (id) {
-    return isCustomScheme(id) ? id : this.map(id, { isImport: true, isBuiltin: this.builtins.has(id), isSourceMap: false })
+    if (isCustomScheme(id)) return id
+    return this.map(id, {
+      userspace: this.userspace,
+      isImport: true,
+      isBuiltin: this.builtins.has(id),
+      isSourceMap: false,
+      isConsole: false
+    })
   }
 
   async findPackageJSON (filename, { directory = false } = {}) {
@@ -93,7 +102,7 @@ class ScriptLinker {
 
   async resolve (req, basedir, { isImport = true } = {}) {
     if (isImport) {
-      req = this.importMap(req, basedir)
+      req = this.mapImport(req, basedir)
       if (isCustomScheme(req)) return req
     }
 
@@ -142,9 +151,9 @@ class ScriptLinker {
 
 ScriptLinker.defaultCompile = d.compile
 ScriptLinker.defaultMap = d.map
+ScriptLinker.defaultMapImport = d.mapImport
 ScriptLinker.defaultBuiltins = d.builtins
 ScriptLinker.defaultUserspace = d.userspace
-ScriptLinker.defaultImportMap = d.importMap
 
 module.exports = ScriptLinker
 
