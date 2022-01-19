@@ -149,11 +149,7 @@ class ScriptLinker {
   }
 }
 
-ScriptLinker.defaultCompile = d.compile
-ScriptLinker.defaultMap = d.map
-ScriptLinker.defaultMapImport = d.mapImport
-ScriptLinker.defaultBuiltins = d.builtins
-ScriptLinker.defaultUserspace = d.userspace
+ScriptLinker.defaults = d
 
 module.exports = ScriptLinker
 
