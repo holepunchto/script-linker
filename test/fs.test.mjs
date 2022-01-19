@@ -144,7 +144,7 @@ test('(esm) it does not try to resolve custom protocol paths', async ({ is, ok }
   const sl = scriptlinker()
   const fpath = unixresolve(__dirname, './fixtures/esm-custom-scheme/index.js')
   const mod = await sl.load(fpath)
-  is(mod.resolutions.length, 8)
+  is(mod.resolutions.length, 8, 'fixture has 8 custom protocols')
   const esm = await mod.toESM()
   const lines = esm.split('\n').filter(Boolean)
   is(
