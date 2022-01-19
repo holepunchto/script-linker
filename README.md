@@ -28,14 +28,19 @@ const s = new ScriptLinker({
     // return a url that is actually passed to import
     // a default method is provided
   },
+  importMap (id, filename) {
+    // rewrite an import if you want to.
+    // run AFTER resolves and all imports, including custom scheme ones
+    // filename is the filename that is importing
+    return id
+  },
   readFile (name) {
     return fs.promises...
   },
   stat (name) { // optional call to be used if you cache module resolutions somewhere
     return {
       type: module.type,
-      resolutions: module.resolutions,
-      cache: integerIndicatingACacheIdForName
+      resolutions: module.resolutions
     }
   }
 })
