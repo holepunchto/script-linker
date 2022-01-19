@@ -54,7 +54,7 @@ class ScriptLinker {
     this._userReadFile(name).then((buf) => cb(null, buf), cb)
   }
 
-  _mapImport (id) {
+  _mapImportPostResolve (id) {
     if (isCustomScheme(id)) return id
     return this.map(id, {
       userspace: this.userspace,
