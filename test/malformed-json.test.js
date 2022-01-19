@@ -49,7 +49,7 @@ test('load a malformed package.json (esm)', async ({ exception }) => {
 test('load a module with a malformed package.json (cjs)', async ({ is }) => {
   const linker = new ScriptLinker({ readFile: fs.readFile })
   const mod = await linker.load(path.join(CJS_MALFORMED_PATH, 'index.js'))
-  is(mod.malformedPackageJSON, true)
+  is(mod.packageMalformed, true)
   const src = await mod.toCJS()
   is(eval(src)(), 'malformed') // eslint-disable-line
 })
@@ -57,7 +57,7 @@ test('load a module with a malformed package.json (cjs)', async ({ is }) => {
 test('load a module with a malformed package.json (esm)', async ({ is, exception }) => {
   const linker = new ScriptLinker({ readFile: fs.readFile })
   const mod = await linker.load(path.join(ESM_MALFORMED_PATH, 'index.js'))
-  is(mod.malformedPackageJSON, true)
+  is(mod.packageMalformed, true)
   exception.all(async () => await mod.toESM())
   try {
     await mod.toESM()

@@ -100,7 +100,7 @@ if (!require('worker_threads').isMainThread) {
       compile (...args) {
         const [source, ...rest] = args.reverse()
         const nargs = [...rest.reverse(), source.replace('an export', 'AN EXPORT')]
-        return ScriptLinker.defaultCompile(...nargs)
+        return ScriptLinker.defaults.compile(...nargs)
       }
     }
     const runtime = ScriptLinker.runtime(opts)

@@ -1,33 +1,32 @@
-const Mod = require('./lib/module')
-const defaultCompile = require('./lib/compile')
 const resolveModule = require('resolve')
 const b4a = require('b4a')
-const path = require('path')
-const Module = require('module')
 const unixresolve = require('unix-path-resolve')
 const Xcache = require('xache')
-
-const DEFAULT_CACHE_SIZE = 512
-
-const defaultBuiltins = {
-  has (ns) {
-    return Module.builtinModules.includes(ns)
-  },
-  get (ns) {
-    return require(ns)
-  },
-  keys () {
-    return Module.builtinModules
-  }
-}
+const Mod = require('./lib/module')
+const d = require('./lib/defaults')
+const runtime = require('./runtime')
 
 class ScriptLinker {
-  constructor ({ map = defaultMap, builtins = defaultBuiltins, linkSourceMaps = true, defaultType = 'commonjs', stat, readFile, isFile, isDirectory, cacheSize }) {
+  constructor ({
+    map = d.map,
+    mapImport = d.mapImport,
+    builtins = d.builtins,
+    linkSourceMaps = d.linkSourceMaps,
+    defaultType = d.type,
+    cacheSize = d.cacheSize,
+    userspace = d.userspace,
+    stat,
+    readFile,
+    isFile,
+    isDirectory
+  }) {
     this.map = map
-    this.modules = new Xcache({ maxSize: cacheSize || DEFAULT_CACHE_SIZE })
+    this.mapImport = mapImport
+    this.modules = new Xcache({ maxSize: cacheSize })
     this.builtins = builtins
     this.linkSourceMaps = linkSourceMaps
     this.defaultType = defaultType
+    this.userspace = userspace
 
     this._userStat = stat || null
     this._userReadFile = readFile || null
@@ -55,6 +54,17 @@ class ScriptLinker {
     this._userReadFile(name).then((buf) => cb(null, buf), cb)
   }
 
+  _mapImportPostResolve (id) {
+    if (isCustomScheme(id)) return id
+    return this.map(id, {
+      userspace: this.userspace,
+      isImport: true,
+      isBuiltin: this.builtins.has(id),
+      isSourceMap: false,
+      isConsole: false
+    })
+  }
+
   async findPackageJSON (filename, { directory = false } = {}) {
     let dirname = directory ? unixresolve(filename) : unixresolve(filename, '..')
     while (true) {
@@ -67,6 +77,18 @@ class ScriptLinker {
         dirname = next
       }
       if (src !== null) return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
+    }
+  }
+
+  async * topologicWalk (filename, opts, visited = new Set()) {
+    const m = await this.load(filename, opts)
+
+    yield m
+
+    for (const r of m.resolutions) {
+      if (!r.output || visited.has(r.output)) continue
+      visited.add(filename)
+      yield * this.topologicWalk(r.output, opts, visited)
     }
   }
 
@@ -90,12 +112,18 @@ class ScriptLinker {
     }
   }
 
-  async resolve (ns, basedir, { isImport = true } = {}) {
-    if (this.builtins.has(ns)) return ns
+  async resolve (req, basedir, { isImport = true } = {}) {
+    if (isImport) {
+      req = this.mapImport(req, basedir)
+      if (isCustomScheme(req)) return req
+    }
+
+    if (this.builtins.has(req)) return req
+
     const self = this
 
     return new Promise((resolve, reject) => {
-      resolveModule(ns, {
+      resolveModule(req, {
         basedir,
         extensions: ['.js', '.mjs', '.cjs'],
         realpath (name, cb) {
@@ -129,177 +157,17 @@ class ScriptLinker {
   }
 
   static runtime (opts) {
-    const {
-      map = defaultMap,
-      builtins = defaultBuiltins,
-      compile = defaultCompile,
-      getSync,
-      resolveSync
-    } = opts
-
-    const SLModule = defineModule()
-
-    const sl = global[Symbol.for('scriptlinker')] = {
-      Module: SLModule,
-      require: null,
-      createImport (filename, doImport) {
-        const dirname = path.dirname(filename)
-        return (req) => {
-          try {
-            if (isCustomScheme(req)) return doImport(req)
-            const r = resolveImport(dirname, req)
-            return doImport(r)
-          } catch {
-            return Promise.reject(new Error(`Cannot find package '${req}' imported from ${filename}`))
-          }
-        }
-      },
-      createRequire (filename, parent = null) {
-        if (!parent) {
-          parent = new SLModule(filename, null)
-          parent.filename = filename
-        }
-
-        require.resolve = resolve
-        require.cache = SLModule._cache
-        require.extensions = SLModule._extensions
-        require.main = undefined
-
-        return require
-
-        function resolve (request, opts) {
-          return SLModule._resolveFilename(request, parent, false, opts)
-        }
-
-        function require (request, opts) {
-          return parent.require(request, opts)
-        }
-      },
-      bootstrap (entrypoint, { type } = {}) {
-        if (!entrypoint) throw new Error('Must pass entrypoint')
-        if (!type) throw new Error('Must pass type')
-        const loader = (type === 'commonjs')
-          ? sl.createRequire(entrypoint)
-          : sl.createImport(entrypoint, (p) => import(p))
-        return loader(entrypoint)
-      }
-    }
-
-    sl.require = sl.createRequire('/')
-
-    return sl
-
-    function resolveImport (dirname, req) {
-      const isBuiltin = builtins.has(req)
-      return map(isBuiltin ? req : resolveSync(req, dirname, { isImport: true }), { isImport: true, isBuiltin, isSourceMap: false })
-    }
-
-    function getExtension (filename) {
-      const i = filename.lastIndexOf('.')
-      return i > -1 ? filename.slice(i) : filename
-    }
-
-    function defineModule () {
-      function Module (id = '', parent) {
-        this.id = id
-        this.path = (id === '/') ? id : unixresolve(id, '..')
-        this.exports = {}
-        this.filename = null
-        this.loaded = false
-        this.children = [] // TODO: not updated atm
-        this.paths = []
-        this.parent = parent
-      }
-
-      Module._cache = Object.create(null)
-      Module._pathCache = Object.create(null) // only there in case someone inspects it
-      Module.Module = Module
-      Module.syncBuiltinESMExports = () => {} // noop for now
-      Module.globalPaths = []
-      Module.builtinModules = [...builtins.keys()]
-
-      Module.createRequire = function (filename) {
-        return sl.createRequire(filename, null)
-      }
-
-      Module._resolveFilename = function (request, parent, isMain, opts) {
-        if (opts && opts.resolved) return request
-        if (opts && opts.error) throw new Error(opts.error)
-        if (request === 'module') return request // special case for this module
-        try {
-          return builtins.has(request) ? request : resolveSync(request, parent.path, { isImport: false })
-        } catch {
-          throw new Error(`Cannot find module '${request}' required from ${parent.id}`)
-        }
-      }
-
-      Module._load = function (request, parent, isMain, opts) {
-        const filename = Module._resolveFilename(request, parent, isMain, opts)
-        const cached = Module._cache[filename]
-        if (cached) return cached.exports
-        if (filename === 'module') return Module
-        if (builtins.has(filename)) return builtins.get(filename)
-        const mod = new Module(filename, parent)
-        Module._cache[filename] = mod
-        let threw = true
-        try {
-          mod.load(filename, opts)
-          threw = false
-        } finally {
-          if (threw) {
-            delete Module._cache[filename]
-          }
-        }
-        return mod.exports
-      }
-
-      Module._extensions = {
-        '.js': function (mod, filename, opts) {
-          mod._compile(Module._getSource(filename, opts), filename)
-        },
-        '.json': function (mod, filename, opts) {
-          mod.exports = JSON.parse(Module._getSource(filename, opts))
-        }
-      }
-
-      Module._getSource = function (filename, opts) {
-        return typeof (opts && opts.source) === 'string' ? opts.source : getSync(map(filename, { isImport: false, isBuiltin: false, isSourceMap: false }))
-      }
-
-      Module.prototype._compile = function (source, filename) {
-        compile(this, this.exports, this.path, filename, sl.createRequire(this.path, this), source)
-      }
-
-      Module.prototype.require = function (request, opts) {
-        return Module._load(request, this, false, opts)
-      }
-
-      Module.prototype.load = function (filename, opts) {
-        this.filename = filename
-        const ext = Module._extensions[getExtension(filename)] || Module._extensions['.js']
-        ext(this, filename, opts)
-        this.loaded = true
-      }
-
-      return Module
-    }
+    return runtime(opts)
   }
 }
 
-ScriptLinker.defaultCompile = defaultCompile
-ScriptLinker.defaultMap = defaultMap
-ScriptLinker.defaultBuiltins = defaultBuiltins
-ScriptLinker.defaultUserspace = '-'
+ScriptLinker.defaults = d
 
 module.exports = ScriptLinker
 
 function getPath (o, path) {
   for (let i = 0; i < path.length && o; i++) o = o[path[i]]
   return o
-}
-
-function defaultMap (id, { isImport, isBuiltin, isSourceMap }) {
-  return (isImport ? 'module://' : 'commonjs://') + (isBuiltin ? '' : ScriptLinker.defaultUserspace) + id + (isSourceMap ? '.map' : '')
 }
 
 function isCustomScheme (str) {
