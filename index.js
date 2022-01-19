@@ -52,6 +52,10 @@ class ScriptLinker {
     this._userReadFile(name).then((buf) => cb(null, buf), cb)
   }
 
+  _mapImport (id) {
+    return isCustomScheme(id) ? id : this.map(id, { isImport: true, isBuiltin: this.builtins.has(id), isSourceMap: false })
+  }
+
   async findPackageJSON (filename, { directory = false } = {}) {
     let dirname = directory ? unixresolve(filename) : unixresolve(filename, '..')
     while (true) {
