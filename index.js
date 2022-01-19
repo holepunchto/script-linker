@@ -80,6 +80,18 @@ class ScriptLinker {
     }
   }
 
+  async * topologicWalk (filename, opts, visited = new Set()) {
+    const m = await this.load(filename, opts)
+
+    yield m
+
+    for (const r of m.resolutions) {
+      if (!r.output || visited.has(r.output)) continue
+      visited.add(filename)
+      yield * this.topologicWalk(r.output, opts, visited)
+    }
+  }
+
   async load (filename, opts) {
     let m = this.modules.get(filename)
 
