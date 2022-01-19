@@ -22,16 +22,19 @@ const s = new ScriptLinker({
     },
     get (path) {
       // return the builtin module for that path
+    },
+    keys () {
+      // return the list of builtin modules
     }
   },
-  map (path, { isImport, isBuiltin, isSourceMap }) {
-    // return a url that is actually passed to import
-    // a default method is provided
+  map (path, { isImport, isBuiltin, isSourceMap, isConsole }) {
+    // return a url that is actually passed to import/getSync
+    // a default method is provided (see ./lib/defaults.js)
   },
-  importMap (id, filename) {
+  mapImport (id, dirname) {
     // rewrite an import if you want to.
-    // run AFTER resolves and all imports, including custom scheme ones
-    // filename is the filename that is importing
+    // runs BEFORE resolve on all imports, including custom scheme ones
+    // dirname is directory the import is coming from for conveinience
     return id
   },
   readFile (name) {
