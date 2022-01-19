@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "test": "npm run lint && brittle test/*.test.*js",
-    "lint": "standardx"
+    "lint": "true"
   },
   "dependencies": {
     "acorn": "^8.6.0",
