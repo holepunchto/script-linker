@@ -172,9 +172,14 @@ The filename (and id) for this module.
 An array of the imports/requires this module has, and what they resolve to.
 Note that the requires might be wrong (very likely not!), but is merely there as a caching optimisation.
 
+The main work of ScriptLinker is to produce this array. When produced, you can cache it and pass it using the stat
+function so transforms run faster on reboots.
+
 #### `module.type`
 
 Is this an esm module or commonjs?
+
+Similarly to resolutions, you can cache this and pass it using stat.
 
 #### `string = await s.transform(options)`
 
