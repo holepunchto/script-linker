@@ -32,7 +32,7 @@ exports.builtins = {
 
 function defaultMap (id, { protocol, isImport, isBuiltin, isSourceMap, isConsole }) {
   const type = isConsole ? 'app' : (isSourceMap ? 'map' : isImport ? 'esm' : 'cjs')
-  return protocol + '://' + type + (isBuiltin ? '/~' : '') + id
+  return protocol + '://' + type + (isBuiltin ? '/~' : '') + encodeURI(id)
 }
 
 function defaultMapImport (link, dirname) {

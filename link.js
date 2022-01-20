@@ -11,6 +11,8 @@ exports.parse = function parse (l) {
   const extra = l.lastIndexOf('?')
   if (extra > -1) l = l.slice(0, l)
 
+  l = decodeURI(l)
+
   let protocol = null
   let transform = null
 
