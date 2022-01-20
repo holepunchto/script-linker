@@ -37,7 +37,8 @@
   "standardx": {
     "parser": "@babel/eslint-parser",
     "ignore": [
-      "test/fixtures"
+      "test/fixtures",
+      "example"
     ]
   },
   "babel": {
