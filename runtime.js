@@ -6,9 +6,8 @@ module.exports = function runtime ({
   mapImport = d.mapImport,
   builtins = d.builtins,
   compile = d.compile,
-  userspace = d.userspace,
   symbol = d.symbol,
-  protocols = d.protocols,
+  protocol = d.protocol,
   getSync,
   resolveSync
 }) {
@@ -72,8 +71,7 @@ module.exports = function runtime ({
   function resolveImport (dirname, req) {
     const isBuiltin = builtins.has(req)
     return map(isBuiltin ? req : resolveSync(req, dirname, { isImport: true }), {
-      protocols,
-      userspace,
+      protocol,
       isImport: true,
       isBuiltin,
       isSourceMap: false,
@@ -157,7 +155,7 @@ module.exports = function runtime ({
     Module._getSource = function (filename, opts) {
       if (typeof (opts && opts.source) === 'string') return opts.source
       return getSync(map(filename, {
-        userspace,
+        protocol,
         isImport: false,
         isBuiltin: false,
         isSourceMap: false,

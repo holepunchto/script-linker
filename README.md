@@ -9,6 +9,7 @@ Features include:
 * IO agnostic, bring your own IO
 * Similar CJS/ESM interop like Node.js
 * Cross platform
+* Very fast. More than 100x faster than detective used in browserify.
 
 ## Usage
 
@@ -16,46 +17,14 @@ Features include:
 const ScriptLinker = require('script-linker')
 
 const s = new ScriptLinker({
-  builtins: {
-    has (path) {
-      // return true if builtin, false otherwise
-    },
-    get (path) {
-      // return the builtin module for that path
-    },
-    keys () {
-      // return the list of builtin modules
-    }
-  },
-  map (path, { isImport, isBuiltin, isSourceMap, isConsole }) {
-    // return a url that is actually passed to import/getSync
-    // a default method is provided (see ./lib/defaults.js)
-  },
-  mapImport (id, dirname) {
-    // rewrite an import if you want to.
-    // runs BEFORE resolve on all imports, including custom scheme ones
-    // dirname is directory the import is coming from for conveinience
-    return id
-  },
   readFile (name) {
-    return fs.promises...
-  },
-  stat (name) { // optional call to be used if you cache module resolutions somewhere
-    return {
-      type: module.type,
-      resolutions: module.resolutions
-    }
+    return fs.promises.read(path.join(aRoot, name))
   }
 })
 
-const module = await s.load('/some/module.js')
+const mod = await s.load('/some/module.js')
 
-console.log(module.type) // module/json/commonjs
-console.log(module.resolutions) // the resolved modules
-console.log(module.source) // original source
-console.log(module.toESM()) // transform to esm with imports preresolved
-console.log(module.toCJS()) // transform to cjs with requires preresolved
-console.log(module.geneateSourceMap()) // generate a source map
+console.log(mod.toESM()) // transform to esm with imports preresolved
 ```
 
 In the process executing the module, you need to include the ScriptLinker runtime dep.
@@ -64,20 +33,191 @@ Currently that's done by running
 ```js
 // Run this in the render/module process.
 // Sets up a global object, global[Symbol.for('scriptlinker')], that is used to make modules run.
-// Has no nodejs/native deps so can be browserified if preferred.
+// Has no nodejs/native deps so can be bundled if preferred.
 
 ScriptLinker.preload({
-  builtins, // same as above
-  map, // same as above
   getSync (url) {
-    // resolve this url synchronously (ie xhr sync or equi)
-    // the url is ALWAYS a url returned from map so you should know
-    // how to resolve the url and return the relevant content, ie cjs/esm/sourcemap string
+    // resolve this url synchronously (ie xhr sync or equi), see below for more
   },
   resolveSync (req, dirname, { isImport }) {
-    // resolve the import/require request ie "./foo.js" or "fs"
-    // from the directory passed. isImport indicates if this is a require or import() call.
-    // should return the absolute path to the module.
+    // resolve the import/require request ie "./foo.js" or "fs" from the directory passed
   }
 })
 ```
+
+## Links
+
+Per default the map function in ScriptLinker produces URLs per the following spec
+
+```
+app://[raw|esm|cjs|map|app]/(filename)|(dirname~module)
+```
+
+The links can be parsed (and generated) with the the links submodule
+
+```js
+const { links } = ScriptLinker // can also be loaded using require('script-linker/links')
+
+// returns { protocol: 'app', transform: 'esm', resolve: 'module', dirname: '/', filename: null }
+const l = links.parse('app://esm/~module')
+```
+
+## Runtime
+
+For ScriptLinker to resolve dynamic imports or commonjs modules it needs a small runtime defined, with some helper functions.
+In your execution context (ie the frontend), load this using the runtime submodule
+
+```js
+const { runtime } = ScriptLinker // can also be loaded using require('script-linker/runtime')
+
+runtime({
+  map, // same as below
+  mapImport, // same as below
+  builtins, // same as below
+  getSync (url) {
+    // synchronously load this url and return the content as a string
+    // per default this is an url produced by the links spec above expressing what it wants to load
+    // you can make your own url scheme using the map function (see below)
+  },
+  resolveSync (req, dirname, { isImport }) {
+    // synchronously resolve this url into the absolute path it represents
+    // per default this is an url produced by the links spec above expressing what it wants to resolve
+    // you can make your own url scheme using the map function (see below)
+  }
+})
+```
+
+## API
+
+#### `s = new ScriptLinker(options)`
+
+Make a new ScriptLinker instance. Options include
+
+```js
+{
+  // return a promise to the contents of this file or throw
+  async readFile (name) { },
+  // (optional) is this file a directory?
+  async isDirectory (name) { },
+  // (optional) is this a file?
+  async isFile (name) { },
+  // (optional) return cache info for a file (ie, { type, resolutions })
+  async stat (name) { },
+  // (optional) provide the set of builtins you want to expose
+  builtins: {
+    has (name) { },
+    async get (name) { },
+    keys () { } // return an array of all builtins
+  },
+  // (optional) do not link any runtime - only needed for static bundling
+  bare: false,
+  // (optional) link in source maps for the generated code?
+  linkSourceMaps: true,
+  // (optional) symbol name to use for the scriptlinker runtime global
+  symbol: 'scriptlinker',
+  // (optional) protocol name that is passed to map
+  protocol: 'app',
+  // (optional) if no type is declared, and .js is used assume this type
+  defaultType: 'commonjs',
+  // (optional) per default maps to the link spec above
+  map (id, { protocol, isImport, isConsole, isSourceMap, isBuiltin }) {
+    return // url that is passed to import that should load the above
+    // note that isConsole means that this is the url used by a source map
+  },
+  // (optional) map an import BEFORE it is passed to resolve
+  mapImport (id, dirname) { }
+}
+```
+
+#### `filename = await s.resolve(request, dirname, [options])`
+
+Resolve a request (ie `./foo.js` or `module`) into an absolute filename from the context of a directory.
+Options include:
+
+```js
+{
+  // Should this be resolved as an import or a require?
+  isImport: true,
+  // Same as above, but added as a convenience as links contain the transform
+  transform: 'esm'
+}
+```
+
+#### `module = await s.load(filename)`
+
+Load a module. `filename` should be an absolute path.
+
+#### `string = module.source`
+
+The raw source of the module
+
+#### `string = module.toESM()`
+
+Transform this module to be ESM.
+
+#### `string = module.toCJS()`
+
+Transform this module to be CJS.
+
+#### `string = module.generateSourceMap()`
+
+Generate a source map for this module.
+
+#### `string = module.filename`
+
+The filename (and id) for this module.
+
+#### `module.resolutions`
+
+An array of the imports/requires this module has, and what they resolve to.
+Note that the requires might be wrong (very likely not!), but is merely there as a caching optimisation.
+
+The main work of ScriptLinker is to produce this array. When produced, you can cache it and pass it using the stat
+function so transforms run faster on reboots.
+
+#### `module.type`
+
+Is this an esm module or commonjs?
+
+Similarly to resolutions, you can cache this and pass it using stat.
+
+#### `string = await s.transform(options)`
+
+Helper for easily transforming a module based on a set of options.
+
+Options include:
+
+```js
+{
+  filename: '/path/to/file.js', // if set transform this file
+  resolve: './module', // otherwise module is expressed by this request,
+  dirname: '/', // resolve from the context of this dir
+  transform: 'esm' || 'cjs' || 'map', // toESM(), toCJS() or generateSourceMap()?
+}
+```
+
+Optionally instead of the transform you can pass the following flags instead for convenience
+
+```js
+{
+  isSourceMap: true // same as transform: 'map'
+  isImport: true // true means transform: 'esm', false means transform: 'cjs'
+}
+```
+
+Note that the options to transform match what is returned from the url parser meaning the following works
+
+```js
+const l = ScriptLinker.links.parse(defaultUrl)
+const source = await s.transform(l)
+```
+
+#### `string = await s.bundle(filename, { builtins: 'builtinsObjectName' })`
+
+A simple static bundler that compiles the module specified by filename and it's dependencies into a single script without dependencies.
+
+Builtins should be the string name of the global variable containing the builtins provided.
+
+#### `for await (const { isImport, module } of s.dependencies(filename))`
+
+Walk the dependencies of a module. Each pair of isImport, module is only yielded once.
