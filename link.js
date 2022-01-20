@@ -9,7 +9,7 @@ exports.stringify = function stringify (o) {
 
 exports.parse = function parse (l) {
   const extra = l.lastIndexOf('?')
-  if (extra > -1) l = l.slice(0, l)
+  if (extra > -1) l = l.slice(0, extra)
 
   l = decodeURI(l)
 
