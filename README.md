@@ -8,7 +8,7 @@ Features include:
 * Source Maps for all transforms so debugging code is easy
 * IO agnostic, bring your own IO
 * Similar CJS/ESM interop like Node.js
-* Cross platform (wip)
+* Cross platform
 
 ## Usage
 
