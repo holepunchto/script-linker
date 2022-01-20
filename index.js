@@ -6,6 +6,7 @@ const Mod = require('./lib/module')
 const bundle = require('./lib/bundle')
 const d = require('./defaults')
 const runtime = require('./runtime')
+const link = require('./link')
 
 class ScriptLinker {
   constructor ({
@@ -15,9 +16,8 @@ class ScriptLinker {
     linkSourceMaps = d.linkSourceMaps,
     defaultType = d.type,
     cacheSize = d.cacheSize,
-    userspace = d.userspace,
     symbol = d.symbol,
-    protocols = d.protocols,
+    protocol = d.protocol,
     bare = false,
     stat,
     readFile,
@@ -30,9 +30,8 @@ class ScriptLinker {
     this.builtins = builtins
     this.linkSourceMaps = linkSourceMaps
     this.defaultType = defaultType
-    this.userspace = userspace
     this.symbol = symbol
-    this.protocols = protocols
+    this.protocol = protocol
     this.bare = bare
 
     this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
@@ -65,8 +64,7 @@ class ScriptLinker {
   _mapImportPostResolve (id) {
     if (isCustomScheme(id)) return id
     return this.map(id, {
-      userspace: this.userspace,
-      protocols: this.protocols,
+      protocol: this.protocol,
       isImport: true,
       isBuiltin: this.builtins.has(id),
       isSourceMap: false,
@@ -126,7 +124,19 @@ class ScriptLinker {
     }
   }
 
-  async resolve (req, basedir, { isImport = true } = {}) {
+  async transform ({ isSourceMap, isImport, transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs', filename, resolve, dirname }) {
+    if (!filename) filename = await this.resolve(resolve, dirname)
+
+    const mod = await this.load(filename)
+
+    if (transform === 'map') return mod.generateSourceMap()
+    if (transform === 'esm') return mod.toESM()
+    if (transform === 'cjs') return mod.toCJS()
+
+    return mod.source
+  }
+
+  async resolve (req, basedir, { transform = 'esm', isImport = transform === 'esm' } = {}) {
     if (isImport) {
       req = this.mapImport(req, basedir)
       if (isCustomScheme(req)) return req
@@ -180,6 +190,7 @@ class ScriptLinker {
 }
 
 ScriptLinker.defaults = d
+ScriptLinker.link = link
 
 module.exports = ScriptLinker
 
