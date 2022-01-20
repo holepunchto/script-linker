@@ -3,8 +3,8 @@ const b4a = require('b4a')
 const unixresolve = require('unix-path-resolve')
 const Xcache = require('xache')
 const Mod = require('./lib/module')
-const d = require('./lib/defaults')
 const bundle = require('./lib/bundle')
+const d = require('./defaults')
 const runtime = require('./runtime')
 
 class ScriptLinker {

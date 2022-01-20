@@ -1,4 +1,4 @@
-const d = require('./lib/defaults')
+const d = require('./defaults')
 const unixresolve = require('unix-path-resolve')
 
 module.exports = function runtime ({

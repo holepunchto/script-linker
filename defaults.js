@@ -1,6 +1,6 @@
 let builtinModules = null
 
-exports.compile = require('./compile')
+exports.compile = require('./lib/compile')
 
 exports.map = defaultMap
 
