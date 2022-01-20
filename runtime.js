@@ -7,12 +7,14 @@ module.exports = function runtime ({
   builtins = d.builtins,
   compile = d.compile,
   userspace = d.userspace,
+  symbol = d.symbol,
+  protocols = d.protocols,
   getSync,
   resolveSync
 }) {
   const SLModule = defineModule()
 
-  const sl = global[Symbol.for('scriptlinker')] = {
+  const sl = global[Symbol.for(symbol)] = {
     Module: SLModule,
     require: null,
     createImport (filename, doImport) {
@@ -70,6 +72,7 @@ module.exports = function runtime ({
   function resolveImport (dirname, req) {
     const isBuiltin = builtins.has(req)
     return map(isBuiltin ? req : resolveSync(req, dirname, { isImport: true }), {
+      protocols,
       userspace,
       isImport: true,
       isBuiltin,
