@@ -50,7 +50,7 @@ ScriptLinker.preload({
 Per default the map function in ScriptLinker produces URLs per the following spec
 
 ```
-app://[raw|esm|cjs|map|app]/(filename)|(~module)
+app://[raw|esm|cjs|map|app]/(filename)|(dirname~module)
 ```
 
 The links can be parsed (and generated) with the the links submodule
