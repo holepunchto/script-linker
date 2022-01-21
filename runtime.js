@@ -104,7 +104,7 @@ module.exports = function runtime ({
     Module.builtinModules = [...builtins.keys()]
 
     Module.createRequire = function (filename) {
-      return sl.createRequire(filename, null)
+      return sl.createRequire(unixresolve(pathname(filename)), null)
     }
 
     Module._resolveFilename = function (request, parent, isMain, opts) {
@@ -194,4 +194,10 @@ module.exports = function runtime ({
 
 function isCustomScheme (str) {
   return /^[a-z][a-z0-9]+:/i.test(str)
+}
+
+function pathname (u) {
+  const m = u.match(/^\w+:\/\/[^/]*(\/[^?]*)/)
+  if (m) return decodeURI(m[1])
+  return u
 }
