@@ -23,7 +23,7 @@ test('it loads builtins', async ({ is }) => {
   is(mod.builtin, true)
   is(mod.type, 'module')
   is(mod.package, null)
-  is(mod.source, (`
+  is(mod.source.trim(), (`
 const mod = global[Symbol.for('scriptlinker')].require("events")
 export const once = mod.once
 export const on = mod.on
