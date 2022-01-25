@@ -164,7 +164,12 @@ class ScriptLinker {
         },
         packageFilter (pkg, pkgfile, dir) {
           if (isImport) {
-            const esmMain = getPath(pkg, ['exports', 'import']) || getPath(pkg, ['exports', '.', 'import'])
+            const esmMain = (
+              getPath(pkg, ['exports', 'import']) || getPath(pkg, ['exports', '.', 'import']) ||
+              getPath(pkg, ['exports', 'node']) || getPath(pkg, ['exports', '.', 'node']) ||
+              getPath(pkg, ['exports', 'node', 'import']) || getPath(pkg, ['exports', '.', 'node', 'import'])
+            )
+
             if (esmMain) pkg.main = esmMain
           }
           return pkg
