@@ -5,5 +5,6 @@ import b from './b.mjs'
 import unix from 'unix-path-resolve'
 import './folder/test.mjs'
 import './a b.mjs'
+import d from './faux.js'
 
-console.log({ foo, dep, dyn, b, unix })
+console.log({ foo, dep, dyn, b, unix, d })
