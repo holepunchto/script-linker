@@ -1,6 +1,7 @@
 const resolveModule = require('resolve')
 const b4a = require('b4a')
 const unixresolve = require('unix-path-resolve')
+const em = require('exports-map')
 const Xcache = require('xache')
 const Mod = require('./lib/module')
 const bundle = require('./lib/bundle')
@@ -18,6 +19,7 @@ class ScriptLinker {
     cacheSize = d.cacheSize,
     symbol = d.symbol,
     protocol = d.protocol,
+    runtimes = ['node'],
     bare = false,
     stat,
     readFile,
@@ -34,6 +36,8 @@ class ScriptLinker {
     this.protocol = protocol
     this.bare = bare
 
+    this._importRuntimes = new Set(['import', ...runtimes])
+    this._requireRuntimes = new Set(['require', ...runtimes])
     this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
     this._userStat = stat || null
     this._userReadFile = readFile || null
@@ -145,6 +149,7 @@ class ScriptLinker {
     if (this.builtins.has(req)) return req
 
     const self = this
+    const runtimes = isImport ? this._importRuntimes : this._requireRuntimes
 
     return new Promise((resolve, reject) => {
       resolveModule(req, {
@@ -162,21 +167,19 @@ class ScriptLinker {
         readFile: (name, cb) => {
           self._readFile(name, cb)
         },
-        packageFilter (pkg, pkgfile, dir) {
-          if (isImport) {
-            const esmMain = (
-              getPath(pkg, ['exports', 'import']) || getPath(pkg, ['exports', '.', 'import']) ||
-              getPath(pkg, ['exports', 'node']) || getPath(pkg, ['exports', '.', 'node']) ||
-              getPath(pkg, ['exports', 'node', 'import']) || getPath(pkg, ['exports', '.', 'node', 'import'])
-            )
+        packageFilter (pkg) {
+          if (!pkg.exports) return pkg
 
-            if (esmMain) pkg.main = esmMain
-          }
+          const main = em(pkg.exports, runtimes, '.')
+          if (main) pkg.main = main
+
           return pkg
         },
-        pathFilter (pkg, path, relativePath) {
-          // TODO: can be used to impl the full export mapping for file imports
-          return relativePath
+        pathFilter (pkg, path, rel) {
+          if (!pkg.exports) return rel
+
+          // We should actually error, if the path doesn't resolve, but resolve cannot to do that
+          return em(pkg.exports, runtimes, '.' + unixresolve('/', rel)) || rel
         }
       }, function (err, res) {
         if (err) return reject(err)
@@ -198,11 +201,6 @@ ScriptLinker.defaults = d
 ScriptLinker.link = link
 
 module.exports = ScriptLinker
-
-function getPath (o, path) {
-  for (let i = 0; i < path.length && o; i++) o = o[path[i]]
-  return o
-}
 
 function isCustomScheme (str) {
   return /^[a-z][a-z0-9]+:/i.test(str)
