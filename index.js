@@ -92,6 +92,8 @@ class ScriptLinker {
   }
 
   async * dependencies (filename, opts, visited = new Set(), modules = new Map(), type = null) {
+    if (isCustomScheme(filename)) return
+
     const m = modules.get(filename) || await this.load(filename, opts)
     modules.set(filename, m)
 
