@@ -34,6 +34,7 @@ export const EventEmitter = mod.EventEmitter
 export const usingDomains = mod.usingDomains
 export const captureRejectionSymbol = mod.captureRejectionSymbol
 export const captureRejections = mod.captureRejections
+export const EventEmitterAsyncResource = mod.EventEmitterAsyncResource
 export const errorMonitor = mod.errorMonitor
 export const defaultMaxListeners = mod.defaultMaxListeners
 export const setMaxListeners = mod.setMaxListeners

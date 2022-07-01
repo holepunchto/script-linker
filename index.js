@@ -156,7 +156,7 @@ class ScriptLinker {
     return new Promise((resolve, reject) => {
       resolveModule(req, {
         basedir,
-        extensions: ['.js', '.mjs', '.cjs'],
+        extensions: ['.js', '.mjs', '.cjs', '.json'],
         realpath (name, cb) {
           cb(null, name)
         },
