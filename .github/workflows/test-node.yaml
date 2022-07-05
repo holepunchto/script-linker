@@ -15,7 +15,11 @@ jobs:
         os: [[self-hosted, Linux], [self-hosted, macOS], [self-hosted, Windows]]
     runs-on: ${{ matrix.os }}
     steps:
+    - name: checkout
     - uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+        ref: ${{ github.event.pull_request.head.ref }}
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v2
       with:
