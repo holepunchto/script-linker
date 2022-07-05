@@ -15,7 +15,7 @@ jobs:
         os: [[self-hosted, Linux], [self-hosted, macOS], [self-hosted, Windows]]
     steps:
     - name: checkout
-    - uses: actions/checkout@v2
+      uses: actions/checkout@v2
       with:
         persist-credentials: false
         ref: ${{ github.event.pull_request.head.ref }}
