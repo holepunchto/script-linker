@@ -94,6 +94,22 @@ class ScriptLinker {
   async * dependencies (filename, opts, visited = new Set(), modules = new Map(), type = null) {
     if (isCustomScheme(filename)) return
 
+    if (filename.endsWith('.html')) {
+      const src = await this._userReadFile(filename)
+      const entries = sniffJS(b4a.toString(src)) // could be improved to sniff custom urls also
+      const dir = unixresolve(filename, '..')
+
+      for (const entry of entries) {
+        try {
+          yield * this.dependencies(unixresolve(dir, entry), opts, visited, modules, null)
+        } catch {
+          continue // prob just an invalid js file we hit
+        }
+      }
+
+      return
+    }
+
     const m = modules.get(filename) || await this.load(filename, opts)
     modules.set(filename, m)
 
@@ -206,4 +222,29 @@ module.exports = ScriptLinker
 
 function isCustomScheme (str) {
   return /^[a-z][a-z0-9]+:/i.test(str)
+}
+
+function sniffJS (src) {
+  const s1 = src.match(/"[^"]+"/ig)
+  const s2 = src.match(/'[^']+'/ig)
+
+  const entries = []
+
+  if (s1) {
+    for (const s of s1) {
+      if (/\.(m|c)?js"$/.test(s)) {
+        entries.push(s.slice(1, -1))
+      }
+    }
+  }
+
+  if (s2) {
+    for (const s of s2) {
+      if (/\.(m|c)?js'$/.test(s)) {
+        entries.push(s.slice(1, -1))
+      }
+    }
+  }
+
+  return entries.filter(e => !isCustomScheme(e))
 }
