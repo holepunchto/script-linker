@@ -114,7 +114,7 @@ class ScriptLinker {
     modules.set(filename, m)
 
     const isImport = (type || m.type) === 'module'
-    const id = (isImport ? 'i' : 'c') + filename
+    const id = ((opts && opts.anyContext) ? '-' : (isImport ? 'i' : 'c')) + filename
 
     if (visited.has(id)) return
     visited.add(id)
