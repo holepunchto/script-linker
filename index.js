@@ -246,5 +246,5 @@ function sniffJS (src) {
     }
   }
 
-  return entries.filter(e => !/^[a-z0-9]+:/i.test(e))
+  return entries.filter(e => !isCustomScheme(e))
 }
