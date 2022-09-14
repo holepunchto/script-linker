@@ -65,12 +65,13 @@ class ScriptLinker {
     this._userReadFile(name).then((buf) => cb(null, buf), cb)
   }
 
-  _mapImportPostResolve (id) {
-    if (isCustomScheme(id)) return id
-    return this.map(id, {
+  _mapImportPostResolve (req, basedir) {
+    req = this.mapImport(req, basedir)
+    if (isCustomScheme(req)) return req
+    return this.map(req, {
       protocol: this.protocol,
       isImport: true,
-      isBuiltin: this.builtins.has(id),
+      isBuiltin: this.builtins.has(req),
       isSourceMap: false,
       isConsole: false
     })
@@ -159,11 +160,7 @@ class ScriptLinker {
   }
 
   async resolve (req, basedir, { transform = 'esm', isImport = transform === 'esm' } = {}) {
-    if (isImport) {
-      req = this.mapImport(req, basedir)
-      if (isCustomScheme(req)) return req
-    }
-
+    if (isImport && isCustomScheme(req)) return req
     if (this.builtins.has(req)) return req
 
     const self = this
