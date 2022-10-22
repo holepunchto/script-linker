@@ -94,6 +94,7 @@ class ScriptLinker {
 
   async * dependencies (filename, opts, visited = new Set(), modules = new Map(), type = null) {
     if (isCustomScheme(filename)) return
+    if (opts && opts.filter && !opts.filter(filename)) return
 
     if (filename.endsWith('.html')) {
       const src = await this._userReadFile(filename)
