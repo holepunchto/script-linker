@@ -9,6 +9,10 @@
     "test": "npm run lint && brittle test/*.test.*js",
     "lint": "standardx"
   },
+  "files": [
+    "*.js",
+    "lib/**.js"
+  ],
   "dependencies": {
     "acorn": "^8.6.0",
     "b4a": "^1.3.1",
