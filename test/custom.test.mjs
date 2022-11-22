@@ -77,6 +77,7 @@ test('(cjs) it loads module', async ({ is, ok }) => {
   is(mod.builtin, false)
   is(mod.type, 'commonjs')
   is(mod.package.name, (await sl.findPackageJSON(fpath)).name)
+  is(mod.name, mod.package.name)
   is(mod.source, (await fs.readFile(fpath)).toString())
   is(mod.resolutions.length, 2)
   ok(mod.resolutions.some((r) => r.output.includes('dep-a')))
