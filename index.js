@@ -13,6 +13,7 @@ class ScriptLinker {
   constructor ({
     map = d.map,
     mapImport = d.mapImport,
+    mapResolve = null,
     builtins = d.builtins,
     linkSourceMaps = d.linkSourceMaps,
     defaultType = d.type,
@@ -28,6 +29,7 @@ class ScriptLinker {
   }) {
     this.map = map
     this.mapImport = mapImport
+    this.mapResolve = mapResolve
     this.modules = new Xcache({ maxSize: cacheSize })
     this.builtins = builtins
     this.linkSourceMaps = linkSourceMaps
@@ -161,6 +163,7 @@ class ScriptLinker {
   }
 
   async resolve (req, basedir, { transform = 'esm', isImport = transform === 'esm' } = {}) {
+    if (this.mapResolve) req = this.mapResolve(req, basedir)
     if (isImport && isCustomScheme(req)) return req
     if (this.builtins.has(req)) return req
 
