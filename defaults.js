@@ -22,7 +22,7 @@ exports.builtins = {
     return builtinModules.includes(req)
   },
   get (req) {
-    return require(req)
+    return (require.builtin || require)(req)
   },
   keys () {
     if (builtinModules === null) builtinModules = require('module').builtinModules || []
