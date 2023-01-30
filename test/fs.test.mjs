@@ -24,21 +24,21 @@ test('it loads builtins', async ({ is }) => {
   is(mod.type, 'module')
   is(mod.package, null)
   is(mod.source.trim(), (`
-const mod = global[Symbol.for('scriptlinker')].require("events")
-export const once = mod.once
-export const on = mod.on
-export const getEventListeners = mod.getEventListeners
-export const EventEmitter = mod.EventEmitter
-export const usingDomains = mod.usingDomains
-export const captureRejectionSymbol = mod.captureRejectionSymbol
-export const captureRejections = mod.captureRejections
-export const EventEmitterAsyncResource = mod.EventEmitterAsyncResource
-export const errorMonitor = mod.errorMonitor
-export const defaultMaxListeners = mod.defaultMaxListeners
-export const setMaxListeners = mod.setMaxListeners
-export const init = mod.init
-export const listenerCount = mod.listenerCount
-export default mod
+const __mod__ = global[Symbol.for('scriptlinker')].require("events")
+export const once = __mod__.once
+export const on = __mod__.on
+export const getEventListeners = __mod__.getEventListeners
+export const EventEmitter = __mod__.EventEmitter
+export const usingDomains = __mod__.usingDomains
+export const captureRejectionSymbol = __mod__.captureRejectionSymbol
+export const captureRejections = __mod__.captureRejections
+export const EventEmitterAsyncResource = __mod__.EventEmitterAsyncResource
+export const errorMonitor = __mod__.errorMonitor
+export const defaultMaxListeners = __mod__.defaultMaxListeners
+export const setMaxListeners = __mod__.setMaxListeners
+export const init = __mod__.init
+export const listenerCount = __mod__.listenerCount
+export default __mod__
   `).trim())
   // domain mutually exclusive w brittle through uncaught exception capture callback registration,
   // repl mutually exclusive w brittle through domain
