@@ -47,13 +47,13 @@ export default __mod__
 
 test('(cjs) it finds package.json by filename', async ({ is }) => {
   const sl = scriptlinker()
-  const pj = await sl.findPackageJSON(unixresolve(__dirname, './fixtures/cjs/index.js'))
+  const pj = await sl.readPackageJSON(unixresolve(__dirname, './fixtures/cjs/index.js'))
   is(pj.name, 'commonjs-app')
 })
 
 test('(cjs) it finds package.json by directory name', async ({ is }) => {
   const sl = scriptlinker()
-  const pj = await sl.findPackageJSON(unixresolve(__dirname, './fixtures/cjs/'), { directory: true })
+  const pj = await sl.readPackageJSON(unixresolve(__dirname, './fixtures/cjs/'), { directory: true })
   is(pj.name, 'commonjs-app')
 })
 
@@ -74,7 +74,7 @@ test('(cjs) it loads module', async ({ is, ok }) => {
   is(mod.dirname, unixresolve(fpath, '..'))
   is(mod.builtin, false)
   is(mod.type, 'commonjs')
-  is(mod.package.name, (await sl.findPackageJSON(fpath)).name)
+  is(mod.package.name, (await sl.readPackageJSON(fpath)).name)
   is(mod.name, mod.package.name)
   is(mod.source, (await fs.readFile(fpath)).toString())
   is(mod.resolutions.length, 2)
@@ -101,13 +101,13 @@ test('(cjs) it converts to JSON if .json', async ({ is }) => {
 
 test('(esm) it finds package.json by filename', async ({ is }) => {
   const sl = scriptlinker()
-  const pj = await sl.findPackageJSON(unixresolve(__dirname, './fixtures/esm/index.js'))
+  const pj = await sl.readPackageJSON(unixresolve(__dirname, './fixtures/esm/index.js'))
   is(pj.name, 'esm-app')
 })
 
 test('(esm) it finds package.json by directory name', async ({ is }) => {
   const sl = scriptlinker()
-  const pj = await sl.findPackageJSON(unixresolve(__dirname, './fixtures/esm/'), { directory: true })
+  const pj = await sl.readPackageJSON(unixresolve(__dirname, './fixtures/esm/'), { directory: true })
   is(pj.name, 'esm-app')
 })
 
@@ -128,7 +128,7 @@ test('(esm) it loads module', async ({ is, ok }) => {
   is(mod.dirname, path.dirname(unixresolve(fpath)))
   is(mod.builtin, false)
   is(mod.type, 'module')
-  is(mod.package.name, (await sl.findPackageJSON(fpath)).name)
+  is(mod.package.name, (await sl.readPackageJSON(fpath)).name)
   is(mod.source, (await fs.readFile(fpath)).toString())
   is(mod.resolutions.length, 2)
   ok(mod.resolutions.some((r) => r.output.includes('dep-a')))

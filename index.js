@@ -47,24 +47,28 @@ class ScriptLinker {
     this._userIsDirectory = isDirectory || null
   }
 
-  _isFile (name, cb) {
-    if (this._userIsFile) {
-      this._userIsFile(name).then((yes) => cb(null, yes), cb)
-    } else {
-      this._userReadFile(name).then(() => cb(null, true), () => cb(null, false))
+  async _isFile (name) {
+    if (this._userIsFile) return this._userIsFile(name)
+    try {
+      await this._userReadFile(name)
+      return true
+    } catch {
+      return false
     }
   }
 
-  _isDirectory (name, cb) {
-    if (this._userIsDirectory) {
-      this._userIsDirectory(name).then((yes) => cb(null, yes), cb)
-    } else {
-      this._userReadFile(name).then(() => cb(null, false), () => cb(null, true))
+  async _isDirectory (name) {
+    if (this._userIsDirectory) return this._userIsDirectory(name)
+    try {
+      await this._userReadFile(name)
+      return false
+    } catch {
+      return true
     }
   }
 
-  _readFile (name, cb) {
-    this._userReadFile(name).then((buf) => cb(null, buf), cb)
+  _readFile (name) {
+    return this._userReadFile(name)
   }
 
   _mapImportPostResolve (req, basedir) {
@@ -79,19 +83,27 @@ class ScriptLinker {
     })
   }
 
-  async findPackageJSON (filename, { directory = false } = {}) {
+  async resolvePackageJSON (filename, { directory = false } = {}) {
     let dirname = directory ? unixresolve(filename) : unixresolve(filename, '..')
     while (true) {
-      let src = null
-      try {
-        src = await this._userReadFile(unixresolve(dirname, 'package.json'))
-      } catch {
-        if (dirname === '/') return null
-        const next = unixresolve(dirname, '..')
-        dirname = next
-      }
-      if (src !== null) return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
+      const pkg = unixresolve(dirname, 'package.json')
+      if (await this._isFile(pkg)) return pkg
+      if (dirname === '/') return null
+      const next = unixresolve(dirname, '..')
+      dirname = next
     }
+  }
+
+  async readPackageJSON (filename, { directory = false } = {}) {
+    let src
+    try {
+      const pkg = await this.resolvePackageJSON(filename, { directory })
+      if (pkg === null) return null
+      src = await this._readFile(pkg)
+    } catch {
+      return null
+    }
+    return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
   }
 
   async * dependencies (filename, opts, visited = new Set(), modules = new Map(), type = null) {
@@ -178,13 +190,13 @@ class ScriptLinker {
           cb(null, name)
         },
         isFile: (name, cb) => {
-          self._isFile(name, cb)
+          self._isFile(name).then((yes) => cb(null, yes), cb)
         },
         isDirectory: (name, cb) => {
-          self._isDirectory(name, cb)
+          self._isDirectory(name).then((yes) => cb(null, yes), cb)
         },
         readFile: (name, cb) => {
-          self._readFile(name, cb)
+          self._readFile(name).then((buf) => cb(null, buf), cb)
         },
         packageFilter (pkg) {
           if (!pkg.exports) return pkg
