@@ -10,22 +10,22 @@ const ESM_MALFORMED_PATH = path.join(__dirname, './fixtures/esm-malformed-packag
 
 test('it returns null if no package.json on the path', async ({ is }) => {
   const linker = new ScriptLinker({ readFile: fs.readFile })
-  is(null, await linker.findPackageJSON(NO_PKG_PATH))
+  is(null, await linker.readPackageJSON(NO_PKG_PATH))
 })
 
 test('it returns null for malformed package.json (cjs)', async ({ exception }) => {
   const linker = new ScriptLinker({ readFile: fs.readFile })
-  const jsonf = linker.findPackageJSON(path.join(CJS_MALFORMED_PATH, 'package.json'))
+  const jsonf = linker.readPackageJSON(path.join(CJS_MALFORMED_PATH, 'package.json'))
   await exception.all(async () => await jsonf)
-  const jsond = linker.findPackageJSON(CJS_MALFORMED_PATH, { directory: true })
+  const jsond = linker.readPackageJSON(CJS_MALFORMED_PATH, { directory: true })
   await exception.all(async () => await jsond)
 })
 
 test('it returns null for malformed package.json (esm)', async ({ exception }) => {
   const linker = new ScriptLinker({ readFile: fs.readFile })
-  const jsonf = linker.findPackageJSON(path.join(ESM_MALFORMED_PATH, 'package.json'))
+  const jsonf = linker.readPackageJSON(path.join(ESM_MALFORMED_PATH, 'package.json'))
   await exception.all(async () => await jsonf)
-  const jsond = linker.findPackageJSON(ESM_MALFORMED_PATH, { directory: true })
+  const jsond = linker.readPackageJSON(ESM_MALFORMED_PATH, { directory: true })
   await exception.all(async () => await jsond)
 })
 
