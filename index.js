@@ -14,6 +14,7 @@ class ScriptLinker {
     map = d.map,
     mapImport = d.mapImport,
     mapResolve = null,
+    mapPath = d.mapPath,
     builtins = d.builtins,
     linkSourceMaps = d.linkSourceMaps,
     defaultType = d.type,
@@ -30,6 +31,7 @@ class ScriptLinker {
     this.map = map
     this.mapImport = mapImport
     this.mapResolve = mapResolve
+    this.mapPath = mapPath
     this.modules = new Xcache({ maxSize: cacheSize })
     this.builtins = builtins
     this.linkSourceMaps = linkSourceMaps
