@@ -6,6 +6,8 @@ exports.map = defaultMap
 
 exports.mapImport = defaultMapImport
 
+exports.mapPath = defaultMapPath
+
 exports.type = 'commonjs'
 
 exports.symbol = 'scriptlinker'
@@ -38,4 +40,8 @@ function defaultMap (id, { protocol, isImport, isBuiltin, isSourceMap, isConsole
 
 function defaultMapImport (link, dirname) {
   return link
+}
+
+function defaultMapPath (path) {
+  return path
 }
