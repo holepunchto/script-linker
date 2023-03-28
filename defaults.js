@@ -25,7 +25,7 @@ exports.builtins = {
   },
   get (req) {
     // in case someone injects a different builtin require (ie boot-drive), support that
-    return (require.builtin || require)(req)
+    return (require.builtinRequire || require)(req)
   },
   keys () {
     if (builtinModules === null) builtinModules = require('module').builtinModules || []
