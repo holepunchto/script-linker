@@ -109,6 +109,11 @@ class ScriptLinker {
   }
 
   async * dependencies (filename, opts, visited = new Set(), modules = new Map(), type = null) {
+    if (Array.isArray(filename)) {
+      for (const f of filename) yield * this.dependencies(f, opts, visited, modules, type)
+      return
+    }
+
     if (isCustomScheme(filename)) return
     if (opts && opts.filter && !opts.filter(filename)) return
 
