@@ -14,7 +14,7 @@ Features include:
 ## Usage
 
 ``` js
-const ScriptLinker = require('script-linker')
+const ScriptLinker = require('@holepunchto/script-linker')
 
 const s = new ScriptLinker({
   readFile (name) {
