@@ -95,8 +95,12 @@ Make a new ScriptLinker instance. Options include
 
 ```js
 {
+  // accepts a Localdrive or Hyperdrive
+  drive: null,
   // return a promise to the contents of this file or throw
   async readFile (name) { },
+  // (optional) key/value object where you can map filenames to source code
+  sourceOverwrites: null,
   // (optional) is this file a directory?
   async isDirectory (name) { },
   // (optional) is this a file?
