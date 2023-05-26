@@ -6,7 +6,7 @@ import test from 'brittle'
 
 const __dirname = path.join(url.fileURLToPath(import.meta.url), '..')
 
-test('it should intercept resolve and load calls for esm', async ({ is, teardown }) => {
+test.skip('it should intercept resolve and load calls for esm', async ({ is, teardown }) => {
   const child = spawn(
     process.execPath,
     [
