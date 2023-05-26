@@ -18,7 +18,7 @@ ipcRenderer.on('warmup', function (sender, id, batch) {
 global.require = s.require
 
 function getSync (url) {
-  const xhr = new XMLHttpRequest() // eslint-disable-line
+  const xhr = new XMLHttpRequest() // eslint-disable-line no-undef
 
   xhr.open('GET', url, false)
   xhr.send(null)

@@ -67,6 +67,7 @@ app.on('ready', function () {
       sendWarmup = s.warmup('/index.html')
     }
 
+  protocol.registerStreamProtocol('app', async (request, reply) => {
     const u = ScriptLinker.link.parse(request.url)
     if (u.transform === 'app' && request.url.endsWith('.js')) u.transform = 'esm'
 

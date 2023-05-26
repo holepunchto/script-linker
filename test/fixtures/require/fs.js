@@ -1,1 +1,1 @@
-const fs = require('fs')
+const fs = require('fs') // eslint-disable-line no-unused-vars

@@ -19,7 +19,7 @@ export async function load (url, context, defaultLoad) {
     const { _rpc } = global[Symbol.for('scriptlinker')]
     const reply = { ...(await _rpc.request('getESM', { url, context })), shortCircuit: true }
     return reply
-  } catch  {
+  } catch {
     return defaultLoad(url, context, defaultLoad)
   }
 }
