@@ -11,7 +11,7 @@ const runtime = require('./runtime')
 const link = require('./link')
 
 class ScriptLinker {
-  constructor ({
+  constructor (drive, {
     map = d.map,
     mapImport = d.mapImport,
     mapResolve = null,
@@ -24,13 +24,8 @@ class ScriptLinker {
     protocol = d.protocol,
     runtimes = ['node'],
     bare = false,
-    drive,
-    sourceOverwrites,
-    stat,
-    readFile,
-    isFile,
-    isDirectory
-  }) {
+    sourceOverwrites
+  } = {}) {
     this.map = map
     this.mapImport = mapImport
     this.mapResolve = mapResolve
@@ -50,18 +45,9 @@ class ScriptLinker {
     this._importRuntimes = new Set(['import', ...runtimes])
     this._requireRuntimes = new Set(['require', ...runtimes])
     this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
-    this._stat = stat || null
-    this._readFile = readFile || null
-    this._userIsFile = isFile || null
-    this._userIsDirectory = isDirectory || null
   }
 
   async _userStat (name) {
-    if (!this.drive) {
-      if (!this._stat) return null
-      return this._stat(name)
-    }
-
     const node = await this.drive.entry(name)
     const metadata = node?.value?.metadata
     if (!metadata) return null
@@ -73,10 +59,7 @@ class ScriptLinker {
       return this.sourceOverwrites[name]
     }
 
-    if (!this.drive) {
-      if (!this._readFile) throw new Error('At least a drive, readFile, or sourceOverwrites is required')
-      return this._readFile(name, stat)
-    }
+    if (!this.drive) throw new Error('At least a drive or sourceOverwrites is required')
 
     const buffer = await this.drive.get(stat ? stat.node : name)
     if (!buffer) throw customError(name, 'ENOENT')
@@ -84,7 +67,6 @@ class ScriptLinker {
   }
 
   async _isFile (name) {
-    if (this._userIsFile) return this._userIsFile(name)
     try {
       await this._userReadFile(name)
       return true
@@ -94,7 +76,6 @@ class ScriptLinker {
   }
 
   async _isDirectory (name) {
-    if (this._userIsDirectory) return this._userIsDirectory(name)
     try {
       await this._userReadFile(name)
       return false
