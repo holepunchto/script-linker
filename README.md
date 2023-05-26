@@ -15,12 +15,10 @@ Features include:
 
 ``` js
 const ScriptLinker = require('@holepunchto/script-linker')
+const Localdrive = require('localdrive')
 
-const s = new ScriptLinker({
-  readFile (name) {
-    return fs.promises.read(path.join(aRoot, name))
-  }
-})
+const drive = new Localdrive('./root-folder')
+const s = new ScriptLinker(drive)
 
 const mod = await s.load('/some/module.js')
 
@@ -89,16 +87,14 @@ const r = runtime({
 
 ## API
 
-#### `s = new ScriptLinker(options)`
+#### `s = new ScriptLinker(drive, options)`
 
-Make a new ScriptLinker instance. Options include
+Make a new ScriptLinker instance. Accepts a Localdrive or Hyperdrive.
+
+Options include:
 
 ```js
 {
-  // accepts a Localdrive or Hyperdrive
-  drive: null,
-  // return a promise to the contents of this file or throw
-  async readFile (name) { },
   // (optional) key/value object where you can map filenames to source code
   sourceOverwrites: null,
   // (optional) is this file a directory?
