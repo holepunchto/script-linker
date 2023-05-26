@@ -59,8 +59,6 @@ class ScriptLinker {
       return this.sourceOverwrites[name]
     }
 
-    if (!this.drive) throw new Error('At least a drive or sourceOverwrites is required')
-
     const buffer = await this.drive.get(stat ? stat.node : name)
     if (!buffer) throw customError(name, 'ENOENT')
     return buffer
