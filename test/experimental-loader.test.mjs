@@ -6,18 +6,16 @@ import test from 'brittle'
 
 const __dirname = path.join(url.fileURLToPath(import.meta.url), '..')
 
-test('it should intercept resolve and load calls for esm', async ({ is, teardown }) => {
-  const child = spawn(
-    process.execPath,
-    [
-      '--experimental-loader',
-      new URL('file://' + path.join(__dirname, './fixtures/experimental-loader/loader.mjs')).href,
-      path.join(__dirname, './fixtures/experimental-loader/main.js')
-    ],
-    { stdio: 'pipe' }
-  )
+test('it should intercept resolve and load calls for esm', async function (t) {
+  const loader = new URL('file://' + path.join(__dirname, './fixtures/experimental-loader/loader.mjs')).href
+  const main = path.join(__dirname, './fixtures/experimental-loader/main.js')
+
+  const args = ['--experimental-loader', loader, main]
+  const child = spawn(process.execPath, args, { stdio: 'pipe' })
+  t.teardown(() => child.kill('SIGINT'))
+
   child.stderr.pipe(process.stderr)
-  teardown(() => child.kill('SIGINT'))
+
   const buf = await once(child.stdout, 'data')
-  is(buf.toString().trim(), 'an export')
+  t.is(buf.toString().trim(), 'an export')
 })
