@@ -4,6 +4,13 @@ const path = require('path')
 const TRPC = require('thread-rpc')
 const ScriptLinker = require('../../../index.js')
 
+// TODO: drive backend
+/* const defaultBackend = {
+  // drive: new Localdrive(__dirname)
+  drive: new Localdrive(path.resolve(__dirname, '..', '..'))
+  // drive: new Localdrive('.')
+} */
+
 const defaultBackend = {
   readFile: fs.readFile,
   stat: fs.stat,
