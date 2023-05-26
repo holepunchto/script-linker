@@ -1,8 +1,9 @@
 const { readFile } = require('fs/promises')
 const path = require('path')
-const e2e = () => {} // TODO: require('./helpers/e2e')
+// const Localdrive = require('localdrive')
+const e2e = () => {} // require('./helpers/e2e')
 
-const minimal = { readFile } // TODO: { drive: new Localdrive(__dirname) }
+const minimal = { readFile } // new Localdrive(__dirname)
 const cjs = { entrypoint: path.join(__dirname, './cjs-e2e.test.js') }
 const esm = { entrypoint: path.join(__dirname, './esm-e2e.test.mjs') }
 

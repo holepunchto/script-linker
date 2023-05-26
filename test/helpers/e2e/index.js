@@ -2,14 +2,13 @@ const { Worker, isMainThread } = require('worker_threads')
 const fs = require('fs/promises')
 const path = require('path')
 const TRPC = require('thread-rpc')
+// const Localdrive = require('localdrive')
 const ScriptLinker = require('../../../index.js')
 
 // TODO: drive backend
-/* const defaultBackend = {
-  // drive: new Localdrive(__dirname)
-  drive: new Localdrive(path.resolve(__dirname, '..', '..'))
-  // drive: new Localdrive('.')
-} */
+// const defaultBackend = new Localdrive(__dirname)
+// new Localdrive(path.resolve(__dirname, '..', '..'))
+// new Localdrive('.')
 
 const defaultBackend = {
   readFile: fs.readFile,
