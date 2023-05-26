@@ -1,13 +1,14 @@
-const fs = require('fs/promises')
 const { readFileSync } = require('fs')
 const path = require('path')
 const { JSDOM } = require('jsdom')
 const test = require('brittle')
+const { create } = require('./helpers/index.js')
 const ScriptLinker = require('../')
 
 test('it should load plain vanilla js modules', async ({ is }) => {
-  const linker = new ScriptLinker({ readFile: fs.readFile })
-  const mod = await linker.load(path.resolve(__dirname, '../node_modules/jquery/dist/jquery.js'))
+  const linker = create(path.resolve(__dirname, '../node_modules'))
+
+  const mod = await linker.load('/jquery/dist/jquery.js')
   const esm = await mod.toESM()
   const runtime = ScriptLinker.runtime({
     resolveSync () { return `data:text/javascript,${encodeURIComponent(esm)}` },
@@ -22,8 +23,7 @@ test('it should load plain vanilla js modules', async ({ is }) => {
 })
 
 test('resolve builtin module name correctly', async function (t) {
-  const root = path.join(__dirname, './fixtures/require')
-  const linker = new ScriptLinker({ readFile: (name) => fs.readFile(path.join(root, name)) })
+  const linker = create(path.join(__dirname, './fixtures/require'))
 
   let first = null
 
@@ -36,8 +36,7 @@ test('resolve builtin module name correctly', async function (t) {
 })
 
 test('resolve builtin module name correctly (slash added)', async function (t) {
-  const root = path.join(__dirname, './fixtures/require')
-  const linker = new ScriptLinker({ readFile: (name) => fs.readFile(path.join(root, name)) })
+  const linker = create(path.join(__dirname, './fixtures/require'))
 
   let first = null
 

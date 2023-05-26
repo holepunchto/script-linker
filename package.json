@@ -35,6 +35,7 @@
     "jquery": "^3.6.0",
     "jsdom": "^19.0.0",
     "standard": "^17.0.0",
+    "localdrive": "^1.6.0",
     "thread-rpc": "^1.1.1"
   }
 }
