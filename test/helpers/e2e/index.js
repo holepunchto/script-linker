@@ -6,7 +6,7 @@ const ScriptLinker = require('../../../index.js')
 
 const defaultBackend = new Localdrive('/')
 
-async function e2e ({ root, entrypoint, listeners, linker, backend } = {}) {
+async function e2e ({ entrypoint, listeners, linker, backend } = {}) {
   if (!isMainThread) return
   if (!entrypoint) throw new Error('Must pass entrypoint')
 
