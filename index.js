@@ -5,6 +5,7 @@ const em = require('exports-map')
 const Xcache = require('xache')
 const Mod = require('./lib/module')
 const bundle = require('./lib/bundle')
+const compat = require('./lib/compat')
 const d = require('./defaults')
 const runtime = require('./runtime')
 const link = require('./link')
@@ -185,6 +186,8 @@ class ScriptLinker {
     if (this.mapResolve) req = this.mapResolve(req, basedir)
     if (isImport && isCustomScheme(req)) return req
     if (this.builtins.has(req)) return req
+
+    if (compat.isPreact(req)) isImport = false
 
     const self = this
     const runtimes = isImport ? this._importRuntimes : this._requireRuntimes
