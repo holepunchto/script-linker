@@ -3,7 +3,7 @@ const unixresolve = require('unix-path-resolve')
 exports.stringify = function stringify (o) {
   const p = o.protocol ? o.protocol + '://' + o.transform : ''
   if (!o.resolve && !o.dirname && !o.filename) return p
-  if (o.resolve) return p + o.dirname + '~' + o.resolve
+  if (o.resolve) return p + o.dirname + '/~' + o.resolve
   return p + o.filename
 }
 
