@@ -1,0 +1,12 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "dependencies": {
+    "crc-native": "^1.0.6",
+    "fs-native-extensions": "^1.2.1",
+    "quickbit-native": "^2.1.2",
+    "sodium-native": "^4.0.3",
+    "simdle-native": "^1.1.1"
+  },
+  "devDependencies": {}
+}
