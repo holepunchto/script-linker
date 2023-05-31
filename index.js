@@ -170,16 +170,24 @@ class ScriptLinker {
     }
   }
 
-  async transform ({ isSourceMap, isImport, transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs', filename, resolve, dirname }) {
+  async transform ({ isSourceMap, isImport, transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs', filename, resolve, dirname }, { module = false } = {}) {
     if (!filename) filename = await this.resolve(resolve, dirname)
 
     const mod = await this.load(filename)
 
-    if (transform === 'map') return mod.generateSourceMap()
-    if (transform === 'esm') return mod.toESM()
-    if (transform === 'cjs') return mod.toCJS()
+    let source = null
+    if (transform === 'map') {
+      source = mod.generateSourceMap()
+    } else if (transform === 'esm') {
+      source = mod.toESM()
+    } else if (transform === 'cjs') {
+      source = mod.toCJS()
+    } else {
+      source = mod.source
+    }
 
-    return mod.source
+    if (!module) return source
+    return { module: mod, source }
   }
 
   async resolve (req, basedir, { transform = 'esm', isImport = transform === 'esm' } = {}) {
