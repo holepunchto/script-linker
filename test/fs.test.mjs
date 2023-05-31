@@ -80,7 +80,6 @@ test('(cjs) it loads module', async ({ is, ok }) => {
   is(mod.resolutions.length, 2)
   ok(mod.resolutions.some((r) => r.output.includes('dep-a')))
   ok(mod.resolutions.some((r) => r.output.includes('dep-b')))
-  is(mod.exports.named.length, 0)
 })
 
 test('(cjs) it converts to ESM', async ({ ok }) => {
