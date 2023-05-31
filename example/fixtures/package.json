@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "A scriptlinker example on electron",
   "dependencies": {
-    "unix-path-resolve": "^1.0.2"
+    "unix-path-resolve": "^1.0.2",
+    "hypercore": "^10.0.0"
   }
 }
