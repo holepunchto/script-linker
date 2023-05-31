@@ -24,6 +24,7 @@ class ScriptLinker {
     protocol = d.protocol,
     runtimes = ['node'],
     bare = false,
+    warmup,
     stat,
     readFile,
     isFile,
@@ -41,9 +42,11 @@ class ScriptLinker {
     this.protocol = protocol
     this.bare = bare
 
+    this._clock = 1
     this._importRuntimes = new Set(['import', ...runtimes])
     this._requireRuntimes = new Set(['require', ...runtimes])
     this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
+    this._userWarmup = warmup || null
     this._userStat = stat || null
     this._userReadFile = readFile || null
     this._userIsFile = isFile || null
@@ -107,6 +110,25 @@ class ScriptLinker {
       return null
     }
     return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
+  }
+
+  async warmup (filename, opts) {
+    if (!this._userWarmup) throw new Error('No warmup function specified in constructor')
+
+    const batch = new Map()
+
+    for await (const { isImport, module } of this.dependencies(filename, opts)) {
+      if (module.type !== 'commonjs') continue
+      const w = batch.get(module.filename)
+      if (!w || !w.ack) batch.set(module.filename, module.getWarmup(isImport))
+    }
+
+    if (!batch.size) return
+
+    for (const w of await this._userWarmup([...batch.values()])) {
+      const mod = this.modules.get(w.filename)
+      if (mod) mod.setWarmup(w)
+    }
   }
 
   async * dependencies (filename, opts, visited = new Set(), modules = new Map(), type = null) {
@@ -175,9 +197,12 @@ class ScriptLinker {
 
     const mod = await this.load(filename)
 
+    if (transform === 'cjs') return mod.toCJS()
+
+    await mod.warmup()
+
     if (transform === 'map') return mod.generateSourceMap()
     if (transform === 'esm') return mod.toESM()
-    if (transform === 'cjs') return mod.toCJS()
 
     return mod.source
   }

@@ -1,4 +1,5 @@
 const fs = require('fs/promises')
+const { readFileSync } = require('fs')
 const path = require('path')
 const { JSDOM } = require('jsdom')
 const test = require('brittle')
@@ -10,6 +11,7 @@ test('it should load plain vanilla js modules', async ({ is }) => {
   const esm = await mod.toESM()
   const runtime = ScriptLinker.runtime({
     resolveSync () { return `data:text/javascript,${encodeURIComponent(esm)}` },
+    getSync (name) { return readFileSync(name, 'utf-8') },
     map (x) { return x }
   })
   const myImport = runtime.createImport(path.resolve(__dirname, '../node_modules/jquery'), (s) => import(s))

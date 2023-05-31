@@ -3,13 +3,13 @@ import e2e from '../../helpers/e2e/index.js'
 import url from 'url'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
-const { linker } = await e2e({ 
+const { linker } = await e2e({
   entrypoint: path.resolve(__dirname, './worker.mjs'),
   listeners: {
     async resolveESM (args) {
       const { specifier } = args
-      return { 
-        url: 'file://' + path.resolve(specifier) 
+      return {
+        url: 'file://' + path.resolve(specifier)
       }
     },
     async getESM (args) {
@@ -20,5 +20,5 @@ const { linker } = await e2e({
       const { format = 'module' } = context
       return { format, source }
     }
-  } 
+  }
 })
