@@ -1,6 +1,6 @@
 {
   "name": "@holepunchto/script-linker",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "CJS/MJS source loader that can preresolve imports/requires so linking them on runtime runs much faster.",
   "main": "index.js",
   "author": "Holepunch",
