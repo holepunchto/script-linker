@@ -87,14 +87,6 @@ const r = runtime({
 })
 ```
 
-When implementing warmup, pass the batch passed to the warmup hook below
-
-```js
-const warmupReply = r.warmup(warmupRequest)
-// send back the reply to the warmup hook on the script linker instance
-// the warmupReply is a serialisable object of { filename, ack, exports } objects
-```
-
 ## API
 
 #### `s = new ScriptLinker(options)`
@@ -133,13 +125,9 @@ Make a new ScriptLinker instance. Options include
     // note that isConsole means that this is the url used by a source map
   },
   // (optional) map an import BEFORE it is passed to resolve
-  mapImport (id, dirname) { },
+  mapImport (id, dirname) { }
   // (optional) support named exports in cjs imported from esm and
   // also speed up cjs require in general
-  async warmup (warmupRequest) {
-    // forward the warmupRequest to the runtime (see above)
-    // the warmup request is a serialisable array of { filename, ack, source } objects
-  }
 }
 ```
 
@@ -236,7 +224,30 @@ Builtins should be the string name of the global variable containing the builtin
 
 Walk the dependencies of a module. Each pair of isImport, module is only yielded once.
 
-#### `await s.warmup(entryPoints)`
+#### `const modMap = await s.warmup(entryPoints)`
 
-Warmup a single or multiple entrypoints. Speeds up CJS loading by bulk transferring the source.
-Requires the `warmup` hook being set.
+Warmup a single or multiple entrypoints. Doing this will help the CJS export parser find more exports.
+Returns a Map of modules that were visited.
+
+You can iterate this map and send to the runtime the filename and cjs of commonjs modules
+
+```js
+const cjs = []
+for (const [filename, mod] of modMap) {
+  if (mod.type !== 'commonjs') continue
+  cjs.push({ filename, source: mod.toCJS() })
+}
+```
+
+In the runtime, use this info to populate `runtime.sources` with the cjs source.
+
+```js
+const runtime = ScriptLinker.runtime(...)
+
+// recv batch somehow...
+for (const { filename, source } of batch) {
+  runtime.sources.set(filename, source)
+}
+```
+
+This will result in close to no runtime requests for cjs when running your code.
