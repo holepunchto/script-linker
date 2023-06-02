@@ -127,7 +127,7 @@ class ScriptLinker {
 
     opts = { ...opts, noLock: true }
 
-    for await (const { isImport, module } of this.dependencies(entryPoint, opts, modules)) {
+    for await (const { isImport, module } of this.dependencies(entryPoint, opts, new Set(), modules)) {
       if (isImport && module.type === 'commonjs') module.parseCJSExports() // warm this up
     }
 
@@ -146,9 +146,9 @@ class ScriptLinker {
     return modules
   }
 
-  async * dependencies (filename, opts, modules = new Map(), visited = new Set(), type = null) {
+  async * dependencies (filename, opts, visited = new Set(), modules = new Map(), type = null) {
     if (Array.isArray(filename)) {
-      for (const f of filename) yield * this.dependencies(f, opts, modules, visited, type)
+      for (const f of filename) yield * this.dependencies(f, opts, visited, modules, type)
       return
     }
 
@@ -162,7 +162,7 @@ class ScriptLinker {
 
       for (const entry of entries) {
         try {
-          yield * this.dependencies(unixresolve(dir, entry), opts, modules, visited, null)
+          yield * this.dependencies(unixresolve(dir, entry), opts, visited, modules, null)
         } catch {
           continue // prob just an invalid js file we hit
         }
@@ -183,7 +183,7 @@ class ScriptLinker {
     yield { isImport, module: m }
 
     for (const r of m.resolutions) {
-      if (r.output) yield * this.dependencies(r.output, opts, modules, visited, r.isImport ? 'module' : 'commonjs')
+      if (r.output) yield * this.dependencies(r.output, opts, visited, modules, r.isImport ? 'module' : 'commonjs')
     }
   }
 
