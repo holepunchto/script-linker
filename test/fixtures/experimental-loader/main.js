@@ -3,7 +3,6 @@ import e2e from '../../helpers/e2e/index.js'
 import url from 'url'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
-
 const { linker } = await e2e({
   entrypoint: path.resolve(__dirname, './worker.mjs'),
   listeners: {

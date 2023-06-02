@@ -97,12 +97,6 @@ Options include:
 {
   // (optional) key/value object where you can map filenames to source code
   sourceOverwrites: null,
-  // (optional) is this file a directory?
-  async isDirectory (name) { },
-  // (optional) is this a file?
-  async isFile (name) { },
-  // (optional) return cache info for a file (ie, { type, resolutions, exports })
-  async stat (name) { },
   // (optional) provide the set of builtins you want to expose
   builtins: {
     has (name) { },
