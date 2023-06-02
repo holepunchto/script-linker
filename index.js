@@ -133,10 +133,9 @@ class ScriptLinker {
 
     for (const mod of modules.values()) {
       mod.warmup = warmups
+      if (mod.type !== 'module') continue
 
-      if (module.type !== 'module') continue
-
-      for (const { names, from } of module.namedImports) {
+      for (const { names, from } of mod.namedImports) {
         const target = from.output && modules.get(from.output)
         if (!target || target.type !== 'commonjs') continue
         target.addCJSExports(names)
