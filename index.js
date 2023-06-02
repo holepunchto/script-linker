@@ -41,7 +41,7 @@ class ScriptLinker {
     this.protocol = protocol
     this.bare = bare
 
-    this._lock = new RW()
+    this._rw = new RW()
     this._warmups = 0
     this._importRuntimes = new Set(['import', ...runtimes])
     this._requireRuntimes = new Set(['require', ...runtimes])
@@ -112,12 +112,12 @@ class ScriptLinker {
   }
 
   async warmup (entryPoint, opts) {
-    const release = await this._lock.write()
+    await this._rw.write.lock()
 
     try {
       return await this._warmup(entryPoint, opts)
     } finally {
-      release()
+      this._rw.write.unlock()
     }
   }
 
@@ -208,12 +208,12 @@ class ScriptLinker {
   async load (filename, opts) {
     if (opts && opts.noLock === true) return this._load(filename, opts)
 
-    const release = await this._lock.read()
+    await this._rw.read.lock()
 
     try {
       return await this._load(filename, opts)
     } finally {
-      release()
+      this._rw.read.unlock()
     }
   }
 
