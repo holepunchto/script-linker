@@ -1,6 +1,5 @@
 const d = require('./defaults')
 const unixresolve = require('unix-path-resolve')
-const isValidVariable = require('is-valid-variable')
 
 module.exports = function runtime ({
   map = d.map,
@@ -16,7 +15,7 @@ module.exports = function runtime ({
 
   const sl = global[Symbol.for(symbol)] = {
     Module: SLModule,
-    sources: null,
+    sources: new Map(),
     require: null,
     createImport (filename, doImport) {
       const dirname = filename === '/' ? '/' : unixresolve(filename, '..')
@@ -56,27 +55,6 @@ module.exports = function runtime ({
     requireFromSource (filename, source) {
       const parent = new SLModule(filename, null)
       return parent.require(filename, { source, resolved: true })
-    },
-    warmup (batch) {
-      sl.sources = new Map()
-
-      try {
-        const result = []
-
-        for (const { filename, source } of batch) {
-          sl.sources.set(filename, source)
-        }
-
-        for (const { filename, ack } of batch) {
-          const e = sl.require(filename, { resolved: true })
-          if (ack === 0) continue
-          result.push({ filename, ack, exports: Object.keys(e).filter(isValidVariable) })
-        }
-
-        return result
-      } finally {
-        sl.sources = null
-      }
     },
     bootstrap (entrypoint, { type } = {}) {
       if (!entrypoint) throw new Error('Must pass entrypoint')
@@ -178,7 +156,7 @@ module.exports = function runtime ({
 
     Module._getSource = function (filename, opts) {
       if (typeof (opts && opts.source) === 'string') return opts.source
-      if (sl.sources !== null && sl.sources.has(filename)) return sl.sources.get(filename)
+      if (sl.sources.has(filename)) return sl.sources.get(filename)
 
       return getSync(map(filename, {
         protocol,

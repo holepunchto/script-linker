@@ -2,7 +2,7 @@ const resolveModule = require('resolve')
 const b4a = require('b4a')
 const unixresolve = require('unix-path-resolve')
 const em = require('exports-map')
-const Xcache = require('xache')
+const RW = require('read-write-mutexify')
 const Mod = require('./lib/module')
 const bundle = require('./lib/bundle')
 const compat = require('./lib/compat')
@@ -24,7 +24,6 @@ class ScriptLinker {
     protocol = d.protocol,
     runtimes = ['node'],
     bare = false,
-    warmup,
     stat,
     readFile,
     isFile,
@@ -34,7 +33,7 @@ class ScriptLinker {
     this.mapImport = mapImport
     this.mapResolve = mapResolve
     this.mapPath = mapPath
-    this.modules = new Xcache({ maxSize: cacheSize })
+    this.modules = new Map()
     this.builtins = builtins
     this.linkSourceMaps = linkSourceMaps
     this.defaultType = defaultType
@@ -42,11 +41,11 @@ class ScriptLinker {
     this.protocol = protocol
     this.bare = bare
 
-    this._clock = 1
+    this._lock = new RW()
+    this._warmups = 0
     this._importRuntimes = new Set(['import', ...runtimes])
     this._requireRuntimes = new Set(['require', ...runtimes])
     this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
-    this._userWarmup = warmup || null
     this._userStat = stat || null
     this._userReadFile = readFile || null
     this._userIsFile = isFile || null
@@ -112,28 +111,44 @@ class ScriptLinker {
     return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
   }
 
-  async warmup (filename, opts) {
-    if (!this._userWarmup) throw new Error('No warmup function specified in constructor')
+  async warmup (entryPoint, opts) {
+    const release = await this._lock.write()
 
-    const batch = new Map()
-
-    for await (const { isImport, module } of this.dependencies(filename, opts)) {
-      if (module.type !== 'commonjs') continue
-      const w = batch.get(module.filename)
-      if (!w || !w.ack) batch.set(module.filename, module.getWarmup(isImport))
-    }
-
-    if (!batch.size) return
-
-    for (const w of await this._userWarmup([...batch.values()])) {
-      const mod = this.modules.get(w.filename)
-      if (mod) mod.setWarmup(w)
+    try {
+      return await this._warmup(entryPoint, opts)
+    } finally {
+      release()
     }
   }
 
-  async * dependencies (filename, opts, visited = new Set(), modules = new Map(), type = null) {
+  async _warmup (entryPoint, opts) {
+    const modules = new Map()
+    const warmups = ++this._warmups
+
+    opts = { ...opts, noLock: true }
+
+    for await (const { isImport, module } of this.dependencies(entryPoint, opts, modules)) {
+      if (isImport && module.type === 'commonjs') module.parseCJSExports() // warm this up
+    }
+
+    for (const mod of modules.values()) {
+      mod.warmup = warmups
+
+      if (module.type !== 'module') continue
+
+      for (const { names, from } of module.namedImports) {
+        const target = from.output && modules.get(from.output)
+        if (!target || target.type !== 'commonjs') continue
+        target.addCJSExports(names)
+      }
+    }
+
+    return modules
+  }
+
+  async * dependencies (filename, opts, modules = new Map(), visited = new Set(), type = null) {
     if (Array.isArray(filename)) {
-      for (const f of filename) yield * this.dependencies(f, opts, visited, modules, type)
+      for (const f of filename) yield * this.dependencies(f, opts, modules, visited, type)
       return
     }
 
@@ -147,7 +162,7 @@ class ScriptLinker {
 
       for (const entry of entries) {
         try {
-          yield * this.dependencies(unixresolve(dir, entry), opts, visited, modules, null)
+          yield * this.dependencies(unixresolve(dir, entry), opts, modules, visited, null)
         } catch {
           continue // prob just an invalid js file we hit
         }
@@ -168,15 +183,27 @@ class ScriptLinker {
     yield { isImport, module: m }
 
     for (const r of m.resolutions) {
-      if (r.output) yield * this.dependencies(r.output, opts, visited, modules, r.isImport ? 'module' : 'commonjs')
+      if (r.output) yield * this.dependencies(r.output, opts, modules, visited, r.isImport ? 'module' : 'commonjs')
     }
   }
 
   async load (filename, opts) {
+    if (opts && opts.noLock === true) return this._load(filename, opts)
+
+    const release = await this._lock.read()
+
+    try {
+      return await this._load(filename, opts)
+    } finally {
+      release()
+    }
+  }
+
+  async _load (filename, opts) {
     let m = this.modules.get(filename)
 
     if (m) {
-      await m.refresh()
+      if (this._warmups === 0 && m.warmup !== this._warmups) await m.refresh()
       return m
     }
 
