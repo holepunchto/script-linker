@@ -225,9 +225,6 @@ class ScriptLinker {
     const mod = await this.load(filename)
 
     if (transform === 'cjs') return mod.toCJS()
-
-    await mod.warmup()
-
     if (transform === 'map') return mod.generateSourceMap()
     if (transform === 'esm') return mod.toESM()
 
