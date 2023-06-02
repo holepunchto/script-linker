@@ -6,13 +6,14 @@ const { create } = require('./helpers/index.js')
 const ScriptLinker = require('../')
 
 test('it should load plain vanilla js modules', async function (t) {
-  const linker = create(path.resolve(__dirname, '../node_modules'))
+  const root = path.resolve(__dirname, '../node_modules')
+  const linker = create(root)
 
   const mod = await linker.load('/jquery/dist/jquery.js')
   const esm = await mod.toESM()
   const runtime = ScriptLinker.runtime({
     resolveSync () { return `data:text/javascript,${encodeURIComponent(esm)}` },
-    getSync (name) { return readFileSync(name, 'utf-8') },
+    getSync (name) { return readFileSync(path.resolve(root, '.' + name), 'utf-8') },
     map (x) { return x }
   })
   const myImport = runtime.createImport(path.resolve(__dirname, '../node_modules/jquery'), (s) => import(s))
