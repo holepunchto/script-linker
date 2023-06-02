@@ -12,9 +12,8 @@ test('it should intercept resolve and load calls for esm', async function (t) {
 
   const args = ['--experimental-loader', loader, main]
   const child = spawn(process.execPath, args, { stdio: 'pipe' })
-  t.teardown(() => child.kill('SIGINT'))
-
   child.stderr.pipe(process.stderr)
+  t.teardown(() => child.kill('SIGINT'))
 
   const buf = await once(child.stdout, 'data')
   t.is(buf.toString().trim(), 'an export')

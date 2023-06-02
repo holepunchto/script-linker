@@ -37,11 +37,5 @@
     "standard": "^17.0.0",
     "localdrive": "^1.6.0",
     "thread-rpc": "^1.1.1"
-  },
-  "standard": {
-    "ignore": [
-      "test/fixtures/esm",
-      "test/fixtures/esm-custom-scheme"
-    ]
   }
 }
