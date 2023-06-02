@@ -131,14 +131,33 @@ class ScriptLinker {
       if (isImport && module.type === 'commonjs') module.parseCJSExports() // warm this up
     }
 
+    const stack = []
+
     for (const mod of modules.values()) {
       mod.warmup = warmups
       if (mod.type !== 'module') continue
 
       for (const { names, from } of mod.namedImports) {
-        const target = from.output && modules.get(from.output)
-        if (!target || target.type !== 'commonjs') continue
-        target.addCJSExports(names)
+        if (!from.output) continue
+
+        // use a stack so we can easily forward to all reexports
+        stack.push(modules.get(from.output))
+
+        while (stack.length) {
+          const target = stack.pop()
+          if (!target) continue
+
+          // forward the named exports so they can be generated for us
+          if (target.type === 'commonjs') {
+            target.addCJSExports(names)
+            continue
+          }
+
+          // forward to all re-exports..., ie export * from y
+          for (const filename of target.rexports) {
+            stack.push(modules.get(filename))
+          }
+        }
       }
     }
 
