@@ -101,7 +101,7 @@ Make a new ScriptLinker instance. Options include
   async isDirectory (name) { },
   // (optional) is this a file?
   async isFile (name) { },
-  // (optional) return cache info for a file (ie, { type, resolutions })
+  // (optional) return cache info for a file (ie, { type, resolutions, exports })
   async stat (name) { },
   // (optional) provide the set of builtins you want to expose
   builtins: {
@@ -168,6 +168,10 @@ Generate a source map for this module.
 #### `string = module.filename`
 
 The filename (and id) for this module.
+
+### `cache = module.cache()`
+
+The data to cache if you want to make reloading the script linker faster.
 
 #### `module.resolutions`
 
