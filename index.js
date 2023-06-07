@@ -212,7 +212,7 @@ class ScriptLinker {
     let m = this.modules.get(filename)
 
     if (m) {
-      if (this._warmups === 0 && m.warmup !== this._warmups) await m.refresh()
+      if (this._warmups === 0 || m.warmup !== this._warmups) await m.refresh()
       return m
     }
 
