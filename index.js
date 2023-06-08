@@ -47,15 +47,17 @@ class ScriptLinker {
     this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
   }
 
-  async _readFile (name, error) {
+  async _readFile (nodeOrName, error) {
+    const name = typeof nodeOrName === 'string' ? nodeOrName : nodeOrName.key
+
     if (this.sourceOverwrites !== null && Object.hasOwn(this.sourceOverwrites, name)) {
       return this.sourceOverwrites[name]
     }
 
-    const src = await this.drive.get(name)
+    const src = await this.drive.get(nodeOrName)
 
     if (src === null && error) {
-      const err = new Error('ENOENT: ' + name)
+      const err = new Error('ENOENT: ' + nodeOrName)
       err.code = 'ENOENT'
       throw err
     }
