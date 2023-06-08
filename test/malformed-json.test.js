@@ -73,6 +73,6 @@ test('load a module with a malformed package.json (esm)', async function (t) {
   try {
     await mod.toESM()
   } catch (err) {
-    t.is(err.code, 'ERR_INVALID_PACKAGE_CONFIG')
+    t.is(err.code, 'INVALID_PACKAGE_CONFIG')
   }
 })

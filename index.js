@@ -6,6 +6,7 @@ const RW = require('read-write-mutexify')
 const Mod = require('./lib/module')
 const bundle = require('./lib/bundle')
 const compat = require('./lib/compat')
+const errors = require('./lib/errors')
 const d = require('./defaults')
 const runtime = require('./runtime')
 const link = require('./link')
@@ -47,39 +48,28 @@ class ScriptLinker {
     this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
   }
 
-  async _userStat (name) {
-    const node = await this.drive.entry(name)
-    const metadata = node?.value?.metadata
-    if (!metadata) return null
-    return { ...metadata, node }
-  }
+  async _readFile (nodeOrName, error) {
+    const name = typeof nodeOrName === 'string' ? nodeOrName : nodeOrName.key
 
-  async _userReadFile (name, stat) {
-    if (this.sourceOverwrites && Object.hasOwn(this.sourceOverwrites, name)) {
-      return this.sourceOverwrites[name]
+    if (this.sourceOverwrites !== null && Object.hasOwn(this.sourceOverwrites, name)) {
+      const overwrite = this.sourceOverwrites[name]
+      return typeof overwrite === 'string' ? b4a.from(overwrite) : overwrite
     }
 
-    const buffer = await this.drive.get(stat ? stat.node : name)
-    if (!buffer) throw customError(name, 'ENOENT')
-    return buffer
+    const src = await this.drive.get(nodeOrName)
+    if (src === null && error) throw errors.ENOENT(name)
+
+    return src
   }
 
   async _isFile (name) {
-    try {
-      await this._userReadFile(name)
-      return true
-    } catch {
-      return false
-    }
+    const node = await this.drive.entry(name)
+    return node !== null && !!(node.value && node.value.blob)
   }
 
   async _isDirectory (name) {
-    try {
-      await this._userReadFile(name)
-      return false
-    } catch {
-      return true
-    }
+    const node = await this.drive.entry(name)
+    return node === null
   }
 
   _mapImportPostResolve (req, basedir) {
@@ -106,14 +96,10 @@ class ScriptLinker {
   }
 
   async readPackageJSON (filename, { directory = false } = {}) {
-    let src
-    try {
-      const pkg = await this.resolvePackageJSON(filename, { directory })
-      if (pkg === null) return null
-      src = await this._userReadFile(pkg)
-    } catch {
-      return null
-    }
+    const pkg = await this.resolvePackageJSON(filename, { directory })
+    if (pkg === null) return null
+    const src = await this._readFile(pkg, false)
+    if (!src) return null
     return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
   }
 
@@ -171,7 +157,9 @@ class ScriptLinker {
     if (opts && opts.filter && !opts.filter(filename)) return
 
     if (filename.endsWith('.html')) {
-      const src = await this._userReadFile(filename)
+      const src = await this._readFile(filename, true)
+      if (src === null) return
+
       const entries = sniffJS(b4a.toString(src)) // could be improved to sniff custom urls also
       const dir = unixresolve(filename, '..')
 
@@ -272,7 +260,7 @@ class ScriptLinker {
           self._isDirectory(name).then((yes) => cb(null, yes), cb)
         },
         readFile: (name, cb) => {
-          self._userReadFile(name).then((buf) => cb(null, buf), cb)
+          self._readFile(name, true).then((buf) => cb(null, buf), cb)
         },
         packageFilter (pkg) {
           if (!pkg.exports) return pkg
@@ -336,10 +324,4 @@ function sniffJS (src) {
   }
 
   return entries.filter(e => !isCustomScheme(e))
-}
-
-function customError (message, code) {
-  const err = new Error(code + ': ' + message)
-  err.code = code
-  return err
 }
