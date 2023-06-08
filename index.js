@@ -209,10 +209,12 @@ class ScriptLinker {
   }
 
   async _load (filename, opts) {
+    const forceRefresh = !!opts && opts.refresh === true
+
     let m = this.modules.get(filename)
 
     if (m) {
-      if (this._warmups === 0 || m.warmup !== this._warmups) await m.refresh()
+      if (this._warmups === 0 || m.warmup !== this._warmups || forceRefresh) await m.refresh()
       return m
     }
 
