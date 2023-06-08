@@ -6,6 +6,7 @@ const RW = require('read-write-mutexify')
 const Mod = require('./lib/module')
 const bundle = require('./lib/bundle')
 const compat = require('./lib/compat')
+const errors = require('./lib/errors')
 const d = require('./defaults')
 const runtime = require('./runtime')
 const link = require('./link')
@@ -56,12 +57,7 @@ class ScriptLinker {
     }
 
     const src = await this.drive.get(nodeOrName)
-
-    if (src === null && error) {
-      const err = new Error('ENOENT: ' + nodeOrName)
-      err.code = 'ENOENT'
-      throw err
-    }
+    if (src === null && error) throw errors.ENOENT(name)
 
     return src
   }
