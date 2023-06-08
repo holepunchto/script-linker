@@ -230,10 +230,10 @@ class ScriptLinker {
     }
   }
 
-  async transform ({ isSourceMap, isImport, transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs', filename, resolve, dirname }) {
+  async transform ({ isSourceMap, isImport, transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs', filename, resolve, dirname, refresh }) {
     if (!filename) filename = await this.resolve(resolve, dirname)
 
-    const mod = await this.load(filename)
+    const mod = await this.load(filename, { refresh })
 
     if (transform === 'cjs') return mod.toCJS()
     if (transform === 'map') return mod.generateSourceMap()
