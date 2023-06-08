@@ -51,7 +51,8 @@ class ScriptLinker {
     const name = typeof nodeOrName === 'string' ? nodeOrName : nodeOrName.key
 
     if (this.sourceOverwrites !== null && Object.hasOwn(this.sourceOverwrites, name)) {
-      return this.sourceOverwrites[name]
+      const overwrite = this.sourceOverwrites[name]
+      return typeof overwrite === 'string' ? b4a.from(overwrite) : overwrite
     }
 
     const src = await this.drive.get(nodeOrName)
