@@ -158,7 +158,7 @@ class ScriptLinker {
     if (opts && opts.filter && !opts.filter(filename)) return
 
     if (filename.endsWith('.html')) {
-      const src = await this.drive.get(filename)
+      const src = await this._readFile(filename, true)
       if (src === null) return
 
       const entries = sniffJS(b4a.toString(src)) // could be improved to sniff custom urls also
