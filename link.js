@@ -9,7 +9,12 @@ exports.stringify = function stringify (o) {
 
 exports.parse = function parse (l) {
   const extra = l.lastIndexOf('?')
-  if (extra > -1) l = l.slice(0, extra)
+
+  let refresh = false
+  if (extra > -1) {
+    refresh = /[&?]refresh($|=)/.test(l.slice(extra))
+    l = l.slice(0, extra)
+  }
 
   l = decodeURI(l)
 
@@ -22,7 +27,8 @@ exports.parse = function parse (l) {
       transform,
       resolve: l.slice(1),
       dirname: '/',
-      filename: null
+      filename: null,
+      refresh
     }
   }
 
@@ -39,7 +45,8 @@ exports.parse = function parse (l) {
         transform,
         resolve: null,
         dirname: null,
-        filename: null
+        filename: null,
+        refresh
       }
     }
     transform = l.slice(0, j)
@@ -54,7 +61,8 @@ exports.parse = function parse (l) {
       transform,
       resolve: l.slice(i + 2),
       dirname: i === 0 ? '/' : unixresolve(l.slice(0, i)),
-      filename: null
+      filename: null,
+      refresh
     }
   }
 
@@ -63,6 +71,7 @@ exports.parse = function parse (l) {
     transform,
     resolve: null,
     dirname: null,
-    filename: unixresolve(l)
+    filename: unixresolve(l),
+    refresh
   }
 }
