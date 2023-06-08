@@ -11,7 +11,7 @@ const runtime = require('./runtime')
 const link = require('./link')
 
 class ScriptLinker {
-  constructor ({
+  constructor (drive, {
     map = d.map,
     mapImport = d.mapImport,
     mapResolve = null,
@@ -24,11 +24,8 @@ class ScriptLinker {
     protocol = d.protocol,
     runtimes = ['node'],
     bare = false,
-    stat,
-    readFile,
-    isFile,
-    isDirectory
-  }) {
+    sourceOverwrites
+  } = {}) {
     this.map = map
     this.mapImport = mapImport
     this.mapResolve = mapResolve
@@ -40,20 +37,34 @@ class ScriptLinker {
     this.symbol = symbol
     this.protocol = protocol
     this.bare = bare
+    this.drive = drive
+    this.sourceOverwrites = sourceOverwrites || null
 
     this._rw = new RW()
     this._warmups = 0
     this._importRuntimes = new Set(['import', ...runtimes])
     this._requireRuntimes = new Set(['require', ...runtimes])
     this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
-    this._userStat = stat || null
-    this._userReadFile = readFile || null
-    this._userIsFile = isFile || null
-    this._userIsDirectory = isDirectory || null
+  }
+
+  async _userStat (name) {
+    const node = await this.drive.entry(name)
+    const metadata = node?.value?.metadata
+    if (!metadata) return null
+    return { ...metadata, node }
+  }
+
+  async _userReadFile (name, stat) {
+    if (this.sourceOverwrites && Object.hasOwn(this.sourceOverwrites, name)) {
+      return this.sourceOverwrites[name]
+    }
+
+    const buffer = await this.drive.get(stat ? stat.node : name)
+    if (!buffer) throw customError(name, 'ENOENT')
+    return buffer
   }
 
   async _isFile (name) {
-    if (this._userIsFile) return this._userIsFile(name)
     try {
       await this._userReadFile(name)
       return true
@@ -63,17 +74,12 @@ class ScriptLinker {
   }
 
   async _isDirectory (name) {
-    if (this._userIsDirectory) return this._userIsDirectory(name)
     try {
       await this._userReadFile(name)
       return false
     } catch {
       return true
     }
-  }
-
-  _readFile (name) {
-    return this._userReadFile(name)
   }
 
   _mapImportPostResolve (req, basedir) {
@@ -104,7 +110,7 @@ class ScriptLinker {
     try {
       const pkg = await this.resolvePackageJSON(filename, { directory })
       if (pkg === null) return null
-      src = await this._readFile(pkg)
+      src = await this._userReadFile(pkg)
     } catch {
       return null
     }
@@ -266,7 +272,7 @@ class ScriptLinker {
           self._isDirectory(name).then((yes) => cb(null, yes), cb)
         },
         readFile: (name, cb) => {
-          self._readFile(name).then((buf) => cb(null, buf), cb)
+          self._userReadFile(name).then((buf) => cb(null, buf), cb)
         },
         packageFilter (pkg) {
           if (!pkg.exports) return pkg
@@ -330,4 +336,10 @@ function sniffJS (src) {
   }
 
   return entries.filter(e => !isCustomScheme(e))
+}
+
+function customError (message, code) {
+  const err = new Error(code + ': ' + message)
+  err.code = code
+  return err
 }
