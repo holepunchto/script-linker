@@ -43,7 +43,7 @@ class ScriptLinker {
 
     this._rw = new RW()
     this._warmups = 0
-    this._importRuntimes = new Set(['import', ...runtimes])
+    this._importRuntimes = new Set(['module', 'import', ...runtimes])
     this._requireRuntimes = new Set(['require', ...runtimes])
     this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
   }
