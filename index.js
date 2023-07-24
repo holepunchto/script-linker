@@ -3,6 +3,7 @@ const b4a = require('b4a')
 const unixresolve = require('unix-path-resolve')
 const em = require('exports-map')
 const RW = require('read-write-mutexify')
+const safetyCatch = require('safety-catch')
 const Mod = require('./lib/module')
 const bundle = require('./lib/bundle')
 const compat = require('./lib/compat')
@@ -148,6 +149,8 @@ class ScriptLinker {
   }
 
   async * dependencies (filename, opts, visited = new Set(), modules = new Map(), type = null) {
+    this._prefetch(filename, opts, new Set(), modules, type).catch(safetyCatch)
+
     if (Array.isArray(filename)) {
       for (const f of filename) yield * this.dependencies(f, opts, visited, modules, type)
       return
@@ -188,6 +191,56 @@ class ScriptLinker {
     for (const r of m.resolutions) {
       if (r.output) yield * this.dependencies(r.output, opts, visited, modules, r.isImport ? 'module' : 'commonjs')
     }
+  }
+
+  async _prefetch (filename, opts, visited = new Set(), modules = new Map(), type = null) {
+    if (Array.isArray(filename)) {
+      const promises = []
+      for (const f of filename) promises.push(this._prefetch(f, opts, visited, modules, type))
+      return Promise.all(promises)
+    }
+
+    if (isCustomScheme(filename)) return
+    if (opts && opts.filter && !opts.filter(filename)) return
+
+    if (filename.endsWith('.html')) {
+      const src = await this._readFile(filename, true)
+      if (src === null) return
+
+      const entries = sniffJS(b4a.toString(src)) // could be improved to sniff custom urls also
+      const dir = unixresolve(filename, '..')
+      const promises = []
+
+      for (const entry of entries) {
+        try {
+          promises.push(this._prefetch(unixresolve(dir, entry), opts, visited, modules, null))
+        } catch {
+          continue // prob just an invalid js file we hit
+        }
+      }
+
+      return Promise.all(promises)
+    }
+
+    // We could extract this in a different method like _loadDependency
+    const m = modules.get(filename) || await this.load(filename, opts)
+    modules.set(filename, m)
+
+    const isImport = (type || m.type) === 'module'
+    const id = ((opts && opts.anyContext) ? '-' : (isImport ? 'i' : 'c')) + filename
+
+    if (visited.has(id)) return
+    visited.add(id)
+
+    const promises = []
+
+    for (const r of m.resolutions) {
+      if (r.output) {
+        promises.push(this._prefetch(r.output, opts, visited, modules, r.isImport ? 'module' : 'commonjs'))
+      }
+    }
+
+    return Promise.all(promises)
   }
 
   async load (filename, opts) {
