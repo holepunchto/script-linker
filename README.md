@@ -139,9 +139,18 @@ Options include:
 }
 ```
 
-#### `module = await s.load(filename)`
+#### `module = await s.load(filename, [options])`
 
 Load a module. `filename` should be an absolute path.
+
+Options include:
+
+```js
+{
+  // Transform hook for the source of the loaded file
+  transformSource: (src) => src
+}
+```
 
 #### `string = module.source`
 
