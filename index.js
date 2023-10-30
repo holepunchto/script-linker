@@ -1,4 +1,4 @@
-const resolveModule = require('resolve')
+const resolveModule = require('@holepunchto/drive-resolve')
 const b4a = require('b4a')
 const unixresolve = require('unix-path-resolve')
 const em = require('exports-map')
@@ -243,24 +243,14 @@ class ScriptLinker {
 
     if (compat.isPreact(req)) isImport = false
 
-    const self = this
     const runtimes = isImport ? this._importRuntimes : this._requireRuntimes
 
     return new Promise((resolve, reject) => {
-      resolveModule(req, {
+      resolveModule(this.drive, req, {
         basedir,
         extensions: ['.js', '.mjs', '.cjs', '.json'],
         realpath (name, cb) {
           cb(null, name)
-        },
-        isFile: (name, cb) => {
-          self._isFile(name).then((yes) => cb(null, yes), cb)
-        },
-        isDirectory: (name, cb) => {
-          self._isDirectory(name).then((yes) => cb(null, yes), cb)
-        },
-        readFile: (name, cb) => {
-          self._readFile(name, true).then((buf) => cb(null, buf), cb)
         },
         packageFilter (pkg) {
           if (!pkg.exports) return pkg
