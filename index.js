@@ -243,17 +243,9 @@ class ScriptLinker {
     if (compat.isPreact(req)) isImport = false
 
     const runtimes = isImport ? this._importRuntimes : this._requireRuntimes
+    const resolveOpts = { basedir, extensions: ['.js', '.mjs', '.cjs', '.json'], runtimes }
 
-    return new Promise((resolve, reject) => {
-      resolveModule(this.drive, req, {
-        basedir,
-        extensions: ['.js', '.mjs', '.cjs', '.json'],
-        runtimes
-      }, function (err, res) {
-        if (err) return reject(err)
-        resolve(unixresolve(res))
-      })
-    })
+    return resolveModule(this.drive, req, resolveOpts)
   }
 
   async bundle (filename, opts) {
