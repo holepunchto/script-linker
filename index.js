@@ -243,7 +243,7 @@ class ScriptLinker {
     if (compat.isPreact(req)) isImport = false
 
     const runtimes = isImport ? this._importRuntimes : this._requireRuntimes
-    const resolveOpts = { basedir, extensions: ['.js', '.mjs', '.cjs', '.json'], runtimes }
+    const resolveOpts = { basedir, extensions: ['.js', '.mjs', '.cjs', '.json'], runtimes, sourceOverwrites: this.sourceOverwrites }
 
     return resolveModule(this.drive, req, resolveOpts)
   }
