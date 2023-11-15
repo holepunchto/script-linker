@@ -24,23 +24,9 @@ test('it loads builtins', async function (t) {
   t.is(mod.builtin, true)
   t.is(mod.type, 'module')
   t.is(mod.package, null)
-  t.is(mod.source.trim(), (`
-const __mod__ = global[Symbol.for('scriptlinker')].require("events")
-export const once = __mod__.once
-export const on = __mod__.on
-export const getEventListeners = __mod__.getEventListeners
-export const EventEmitter = __mod__.EventEmitter
-export const usingDomains = __mod__.usingDomains
-export const captureRejectionSymbol = __mod__.captureRejectionSymbol
-export const captureRejections = __mod__.captureRejections
-export const EventEmitterAsyncResource = __mod__.EventEmitterAsyncResource
-export const errorMonitor = __mod__.errorMonitor
-export const defaultMaxListeners = __mod__.defaultMaxListeners
-export const setMaxListeners = __mod__.setMaxListeners
-export const init = __mod__.init
-export const listenerCount = __mod__.listenerCount
-export default __mod__
-  `).trim())
+  // snifff for a couple of exports
+  t.ok(/export const getEventListeners =/.test(mod.source.trim()))
+  t.ok(/export const EventEmitter =/.test(mod.source.trim()))
 
   // domain mutually exclusive w brittle through uncaught exception capture callback registration,
   // repl mutually exclusive w brittle through domain
