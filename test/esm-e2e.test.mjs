@@ -1,12 +1,12 @@
-const test = require('brittle')
-const path = require('path')
-const ScriptLinker = require('../index.js')
-const mod = require('module')
-const fs = require('fs')
+import test from 'brittle'
+import path from 'path'
+import ScriptLinker from '../index.js'
+import mod from 'module'
+import fs from 'fs/promises'
+import { fileURLToPath } from 'url'
 
-const doImport = (x) => {
-  return import(x)
-}
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 test('linker can import', async ({ is, fail, ok }) => {
   const doImport = (x) => {
@@ -32,6 +32,10 @@ test('linker can import', async ({ is, fail, ok }) => {
 test('map should be able to rewrite urls', async ({ is, ok, not, teardown }) => {
   let original = null
   let xformed = null
+
+  const doImport = (x) => {
+    return import(x)
+  }
 
   const opts = {
     getSync (url) {
