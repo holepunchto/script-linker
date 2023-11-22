@@ -15,7 +15,6 @@ test('linker can import', async ({ is, fail, ok }) => {
 
   const opts = {
     getSync (url) {
-      console.log('url', url)
       return fs.readFileSync(url).toString()
     },
     resolveSync (request, basedir) {
