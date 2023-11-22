@@ -32,16 +32,12 @@ test('map should be able to rewrite urls', async ({ is, ok, not, teardown }) => 
   let original = null
   let xformed = null
 
-  const doImport = (x) => {
-    return import(x)
+  const doImport = (url) => {
+    if (!xformed) xformed = url
+    return import(url)
   }
 
   const opts = {
-    getSync (url) {
-      ok(url.includes('cjs-with-imports-and-exports'))
-      if (!xformed) xformed = url
-      return fs.readFileSync(url).toString()
-    },
     resolveSync (request, basedir) {
       return path.join(basedir, request, 'index.js')
     },
@@ -53,6 +49,7 @@ test('map should be able to rewrite urls', async ({ is, ok, not, teardown }) => 
   const runtime = ScriptLinker.runtime(opts)
   const myImport = runtime.createImport(path.join(__dirname, './fixtures/esm-with-exports'), doImport)
   const { default: exp } = await myImport('./esm-with-exports')
+  is(xformed.replace('cjs-with-imports-and-exports', 'esm-with-exports'), original)
   not(exp, 'an export')
 })
 
