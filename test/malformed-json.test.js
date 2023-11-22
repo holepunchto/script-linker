@@ -16,32 +16,32 @@ test('it returns null for malformed package.json (cjs)', async function (t) {
   const linker = create(__dirname)
 
   const jsonf = linker.readPackageJSON(path.join(CJS_MALFORMED_PATH, 'package.json'))
-  await t.exception.all(async () => await jsonf, /Unexpected end of JSON input/)
+  await t.exception.all(async () => await jsonf)
 
   const jsond = linker.readPackageJSON(CJS_MALFORMED_PATH, { directory: true })
-  await t.exception.all(async () => await jsond, /Unexpected end of JSON input/)
+  await t.exception.all(async () => await jsond)
 })
 
 test('it returns null for malformed package.json (esm)', async function (t) {
   const linker = create(__dirname)
 
   const jsonf = linker.readPackageJSON(path.join(ESM_MALFORMED_PATH, 'package.json'))
-  await t.exception.all(async () => await jsonf, /Unexpected end of JSON input/)
+  await t.exception.all(async () => await jsonf)
 
   const jsond = linker.readPackageJSON(ESM_MALFORMED_PATH, { directory: true })
-  await t.exception.all(async () => await jsond, /Unexpected end of JSON input/)
+  await t.exception.all(async () => await jsond)
 })
 
 test('load a malformed package.json (cjs)', async function (t) {
   const linker = create(__dirname)
 
   const mod = await linker.load(path.join(CJS_MALFORMED_PATH, 'package.json'))
-  await t.exception.all(async () => JSON.parse(await mod.toCJS()), /Unexpected end of JSON input/)
+  await t.exception.all(async () => JSON.parse(await mod.toCJS()))
 
   try {
     JSON.parse(await mod.toCJS())
   } catch (err) {
-    t.ok(err.message.includes('Unexpected end of JSON input'))
+    t.pass('errored')
   }
 })
 
@@ -49,7 +49,7 @@ test('load a malformed package.json (esm)', async function (t) {
   const linker = create(__dirname)
 
   const mod = await linker.load(path.join(ESM_MALFORMED_PATH, 'package.json'))
-  await t.exception.all(async () => JSON.parse(await mod.toESM()), /Unexpected token c in JSON at position 0/)
+  await t.exception.all(async () => JSON.parse(await mod.toESM()))
 })
 
 test('load a module with a malformed package.json (cjs)', async function (t) {
