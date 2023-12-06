@@ -1,7 +1,6 @@
-const resolveModule = require('resolve')
+const resolveModule = require('@holepunchto/drive-resolve')
 const b4a = require('b4a')
 const unixresolve = require('unix-path-resolve')
-const em = require('exports-map')
 const RW = require('read-write-mutexify')
 const Mod = require('./lib/module')
 const bundle = require('./lib/bundle')
@@ -243,44 +242,10 @@ class ScriptLinker {
 
     if (compat.isPreact(req)) isImport = false
 
-    const self = this
     const runtimes = isImport ? this._importRuntimes : this._requireRuntimes
+    const resolveOpts = { basedir, extensions: ['.js', '.mjs', '.cjs', '.json'], runtimes: Array.from(runtimes), sourceOverwrites: this.sourceOverwrites }
 
-    return new Promise((resolve, reject) => {
-      resolveModule(req, {
-        basedir,
-        extensions: ['.js', '.mjs', '.cjs', '.json'],
-        realpath (name, cb) {
-          cb(null, name)
-        },
-        isFile: (name, cb) => {
-          self._isFile(name).then((yes) => cb(null, yes), cb)
-        },
-        isDirectory: (name, cb) => {
-          self._isDirectory(name).then((yes) => cb(null, yes), cb)
-        },
-        readFile: (name, cb) => {
-          self._readFile(name, true).then((buf) => cb(null, buf), cb)
-        },
-        packageFilter (pkg) {
-          if (!pkg.exports) return pkg
-
-          const main = em(pkg.exports, runtimes, '.')
-          if (main) pkg.main = main
-
-          return pkg
-        },
-        pathFilter (pkg, path, rel) {
-          if (!pkg.exports) return rel
-
-          // We should actually error, if the path doesn't resolve, but resolve cannot to do that
-          return em(pkg.exports, runtimes, '.' + unixresolve('/', rel)) || rel
-        }
-      }, function (err, res) {
-        if (err) return reject(err)
-        resolve(unixresolve(res))
-      })
-    })
+    return resolveModule(this.drive, req, resolveOpts)
   }
 
   async bundle (filename, opts) {
