@@ -1,4 +1,4 @@
-const resolveModule = require('@holepunchto/drive-resolve')
+const resolveModule = require('drive-resolve')
 const b4a = require('b4a')
 const unixresolve = require('unix-path-resolve')
 const RW = require('read-write-mutexify')
