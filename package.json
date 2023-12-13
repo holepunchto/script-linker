@@ -19,10 +19,10 @@
     ]
   },
   "dependencies": {
-    "drive-resolve": "^1.0.1",
     "acorn": "^8.6.0",
     "b4a": "^1.3.1",
     "cjs-module-lexer": "^1.2.2",
+    "drive-resolve": "^1.0.1",
     "es-module-lexer": "^0.9.3",
     "is-valid-variable": "^1.0.0",
     "read-write-mutexify": "^2.0.0",
@@ -34,7 +34,6 @@
     "jquery": "^3.6.0",
     "jsdom": "^19.0.0",
     "localdrive": "^1.6.0",
-    "standard": "^17.0.0",
-    "thread-rpc": "^1.1.1"
+    "standard": "^17.0.0"
   }
 }
