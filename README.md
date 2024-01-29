@@ -98,6 +98,7 @@ Options include:
   // (optional) key/value object where you can map filenames to source code
   sourceOverwrites: null,
   // (optional) provide the set of builtins you want to expose
+  imports, // An additional "imports" map to apply to all specifiers. Follows the same syntax and rules as the "imports" property defined in `package.json`.
   builtins: {
     has (name) { },
     async get (name) { },
