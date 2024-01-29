@@ -24,7 +24,8 @@ class ScriptLinker {
     protocol = d.protocol,
     runtimes = ['node'],
     bare = false,
-    sourceOverwrites
+    sourceOverwrites,
+    imports
   } = {}) {
     this.map = map
     this.mapImport = mapImport
@@ -39,6 +40,7 @@ class ScriptLinker {
     this.bare = bare
     this.drive = drive
     this.sourceOverwrites = sourceOverwrites || null
+    this.imports = imports
 
     this._rw = new RW()
     this._warmups = 0
@@ -243,7 +245,7 @@ class ScriptLinker {
     if (compat.isPreact(req)) isImport = false
 
     const runtimes = isImport ? this._importRuntimes : this._requireRuntimes
-    const resolveOpts = { basedir, extensions: ['.js', '.mjs', '.cjs', '.json'], runtimes: Array.from(runtimes), sourceOverwrites: this.sourceOverwrites }
+    const resolveOpts = { basedir, extensions: ['.js', '.mjs', '.cjs', '.json'], runtimes: Array.from(runtimes), sourceOverwrites: this.sourceOverwrites, imports: this.imports }
 
     return resolveModule(this.drive, req, resolveOpts)
   }
