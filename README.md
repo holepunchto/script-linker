@@ -249,3 +249,7 @@ for (const { filename, source } of batch) {
 ```
 
 This will result in close to no runtime requests for cjs when running your code.
+
+## License
+
+Apache-2.0
