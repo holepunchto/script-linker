@@ -97,6 +97,8 @@ Options include:
 {
   // (optional) key/value object where you can map filenames to source code
   sourceOverwrites: null,
+  // (optional) additional "imports" map to apply to all specifiers
+  imports,
   // (optional) provide the set of builtins you want to expose
   builtins: {
     has (name) { },
