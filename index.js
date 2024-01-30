@@ -40,7 +40,7 @@ class ScriptLinker {
     this.bare = bare
     this.drive = drive
     this.sourceOverwrites = sourceOverwrites || null
-    this.imports = imports
+    this.imports = imports || null
 
     this._rw = new RW()
     this._warmups = 0
