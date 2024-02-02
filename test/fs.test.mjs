@@ -84,7 +84,7 @@ test('(cjs) it converts to JSON if .json', async function (t) {
   const sl = create(__dirname)
   const mod = await sl.load('/fixtures/cjs/package.json')
   const json = await mod.toCJS()
-  t.is(json, 'module.exports = ' + (await fs.readFile(unixresolve(__dirname, './fixtures/cjs/package.json'))).toString())
+  t.is(json, (await fs.readFile(unixresolve(__dirname, './fixtures/cjs/package.json'))).toString())
 })
 
 test('(esm) it finds package.json by filename', async function (t) {
