@@ -20,7 +20,11 @@ exports.cacheSize = 512
 
 exports.builtins = {
   has (req) {
-    if (builtinModules === null) builtinModules = require('module').builtinModules || []
+    try {
+      if (builtinModules === null) builtinModules = require('module').builtinModules || []
+    } catch {
+      builtinModules = []
+    }
     return builtinModules.includes(req)
   },
   get (req) {
@@ -28,7 +32,11 @@ exports.builtins = {
     return (require.builtinRequire || require)(req)
   },
   keys () {
-    if (builtinModules === null) builtinModules = require('module').builtinModules || []
+    try {
+      if (builtinModules === null) builtinModules = require('module').builtinModules || []
+    } catch {
+      builtinModules = []
+    }
     return builtinModules
   }
 }

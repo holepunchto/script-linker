@@ -26,7 +26,7 @@
     "es-module-lexer": "^0.9.3",
     "is-valid-variable": "^1.0.0",
     "read-write-mutexify": "^2.0.0",
-    "source-map": "^0.7.3",
+    "source-map-bare": "^1.0.0",
     "unix-path-resolve": "^1.0.2"
   },
   "devDependencies": {
