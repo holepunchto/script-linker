@@ -3,14 +3,14 @@ import path from 'path'
 import ScriptLinker from '../index.js'
 import mod from 'module'
 import fs from 'fs/promises'
-import { fileURLToPath } from 'url'
+import { fileURLToPath, pathToFileURL } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 test('linker can import', async ({ is, fail, ok }) => {
   const doImport = (x) => {
-    return import(path.join(__dirname, './fixtures/esm-with-exports', 'index.js'))
+    return import(pathToFileURL(path.join(__dirname, './fixtures/esm-with-exports', 'index.js')).href)
   }
 
   const opts = {
@@ -34,7 +34,7 @@ test('map should be able to rewrite urls', async ({ is, ok, not, teardown }) => 
 
   const doImport = (url) => {
     if (!xformed) xformed = url
-    return import(url)
+    return import(pathToFileURL(url).href)
   }
 
   const opts = {
@@ -80,7 +80,7 @@ test('by default it should resolve builtin modules', async ({ is, ok, fail, tear
 
 test('it should allow custom builtin module resolution', async ({ is, fail, teardown, exception }) => {
   const doImport = (x) => {
-    return import(path.join(__dirname, './fixtures/esm-with-exports', 'index.js'))
+    return import(pathToFileURL(path.join(__dirname, './fixtures/esm-with-exports', 'index.js')).href)
   }
 
   const opts = {
