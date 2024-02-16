@@ -13,7 +13,7 @@ test('linker can createRequire', ({ is, fail, ok }) => {
       return resolve
     },
     getSync (request) {
-      is(request, 'app://cjs' + resolve)
+      is(request.replaceAll('%5C', '\\'), 'app://cjs' + resolve)
       return fs.readFileSync(resolve).toString()
     }
   }
