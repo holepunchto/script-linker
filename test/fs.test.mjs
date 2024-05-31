@@ -144,3 +144,15 @@ test('(esm) it does not try to resolve custom protocol paths', async function (t
     (await fs.readFile(filepath)).toString()
   )
 })
+
+test.solo('converts wasm esm module to url export', async function (t) {
+  const sl = create(__dirname)
+  const filename = '/fixtures/wasm/file.wasm'
+  const mod = await sl.load(filename)
+  const link = { transform: 'wasm', ...mod }
+  const url = await sl.transform(link)
+  t.is(url, 'export default \'/fixtures/wasm/file.wasm\'')
+
+  const source = await sl.transform({ transform: 'app', ...mod })
+  t.is('this-is-a-wasm-file', source)
+})
