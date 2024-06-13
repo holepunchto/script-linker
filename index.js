@@ -233,6 +233,7 @@ class ScriptLinker {
     if (transform === 'cjs') return mod.toCJS()
     if (transform === 'map') return mod.generateSourceMap()
     if (transform === 'esm') return mod.toESM()
+    if (transform === 'wasm') return mod.toWasmURL()
 
     return mod.source
   }
