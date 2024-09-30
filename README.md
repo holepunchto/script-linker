@@ -195,6 +195,7 @@ Options include:
   resolve: './module', // otherwise module is expressed by this request,
   dirname: '/', // resolve from the context of this dir
   transform: 'esm' || 'cjs' || 'map', // toESM(), toCJS() or generateSourceMap()?
+  sourceTransform: async function (buffer, filename) {}, // An async function to apply additional transforms to the file before parsing
 }
 ```
 

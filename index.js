@@ -49,7 +49,7 @@ class ScriptLinker {
     this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
   }
 
-  async _readFile (nodeOrName, error) {
+  async _readFile (nodeOrName, error, opts) {
     const name = typeof nodeOrName === 'string' ? nodeOrName : nodeOrName.key
 
     if (this.sourceOverwrites !== null && Object.hasOwn(this.sourceOverwrites, name)) {
@@ -59,6 +59,14 @@ class ScriptLinker {
 
     const src = await this.drive.get(nodeOrName)
     if (src === null && error) throw errors.ENOENT(name)
+
+    if (opts && typeof opts.sourceTransform === 'function') {
+      const buffer = b4a.from(src)
+      const transformed = await opts.sourceTransform(buffer, name)
+      if (transformed !== null) {
+        return transformed
+      }
+    }
 
     return src
   }
@@ -158,7 +166,7 @@ class ScriptLinker {
     if (opts && opts.filter && !opts.filter(filename)) return
 
     if (filename.endsWith('.html')) {
-      const src = await this._readFile(filename, true)
+      const src = await this._readFile(filename, true, opts)
       if (src === null) return
 
       const entries = sniffJS(b4a.toString(src)) // could be improved to sniff custom urls also
@@ -209,7 +217,7 @@ class ScriptLinker {
     let m = this.modules.get(filename)
 
     if (m) {
-      if (this._warmups === 0 || m.warmup !== this._warmups || forceRefresh) await m.refresh()
+      if (this._warmups === 0 || m.warmup !== this._warmups || forceRefresh) await m.refresh(opts)
       return m
     }
 
@@ -217,7 +225,7 @@ class ScriptLinker {
     this.modules.set(m.filename, m)
 
     try {
-      await m.refresh()
+      await m.refresh(opts)
       return m
     } catch (err) {
       this.modules.delete(m.filename)
@@ -225,10 +233,10 @@ class ScriptLinker {
     }
   }
 
-  async transform ({ isSourceMap, isImport, transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs', filename, resolve, dirname, refresh }) {
+  async transform ({ isSourceMap, isImport, transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs', filename, resolve, dirname, refresh, sourceTransform }) {
     if (!filename) filename = await this.resolve(resolve, dirname)
 
-    const mod = await this.load(filename, { refresh })
+    const mod = await this.load(filename, { refresh, sourceTransform })
 
     if (transform === 'cjs') return mod.toCJS()
     if (transform === 'map') return mod.generateSourceMap()
@@ -277,7 +285,7 @@ function sniffJS (src) {
 
   if (s1) {
     for (const s of s1) {
-      if (/\.(m|c)?js"$/.test(s)) {
+      if (/\.(m|c)?jsx?"$/.test(s)) {
         entries.push(s.slice(1, -1))
       }
     }
@@ -285,7 +293,7 @@ function sniffJS (src) {
 
   if (s2) {
     for (const s of s2) {
-      if (/\.(m|c)?js'$/.test(s)) {
+      if (/\.(m|c)?jsx?'$/.test(s)) {
         entries.push(s.slice(1, -1))
       }
     }
