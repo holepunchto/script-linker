@@ -116,7 +116,6 @@ class ScriptLinker {
 
   async warmup (entryPoint, opts) {
     await this._rw.write.lock()
-    if (opts && opts.sourceTransform) this.sourceTransform = opts.sourceTransform
 
     try {
       return await this._warmup(entryPoint, opts)
@@ -236,9 +235,8 @@ class ScriptLinker {
     }
   }
 
-  async transform ({ isSourceMap, isImport, transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs', filename, resolve, dirname, refresh, sourceTransform }) {
+  async transform ({ isSourceMap, isImport, transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs', filename, resolve, dirname, refresh }) {
     if (!filename) filename = await this.resolve(resolve, dirname)
-    if (sourceTransform) this.sourceTransform = sourceTransform
 
     const mod = await this.load(filename, { refresh })
 
