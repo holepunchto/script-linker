@@ -126,7 +126,7 @@ Options include:
   // also speed up cjs require in general
 
   // (optional) apply additional transforms to a file before parsing
-  sourceTransform: async function (buffer, filename) {},
+  async sourceTransform (buffer, filename) { }
 }
 ```
 
