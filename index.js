@@ -25,6 +25,7 @@ class ScriptLinker {
     runtimes = ['node'],
     bare = false,
     sourceOverwrites,
+    sourceTransform,
     imports
   } = {}) {
     this.map = map
@@ -40,6 +41,7 @@ class ScriptLinker {
     this.bare = bare
     this.drive = drive
     this.sourceOverwrites = sourceOverwrites || null
+    this.sourceTransform = sourceTransform || null
     this.imports = imports || null
 
     this._rw = new RW()
@@ -49,7 +51,7 @@ class ScriptLinker {
     this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
   }
 
-  async _readFile (nodeOrName, error, opts) {
+  async _readFile (nodeOrName, error) {
     const name = typeof nodeOrName === 'string' ? nodeOrName : nodeOrName.key
 
     if (this.sourceOverwrites !== null && Object.hasOwn(this.sourceOverwrites, name)) {
@@ -60,9 +62,9 @@ class ScriptLinker {
     const src = await this.drive.get(nodeOrName)
     if (src === null && error) throw errors.ENOENT(name)
 
-    if (opts && typeof opts.sourceTransform === 'function') {
+    if (this.sourceTransform !== null && typeof this.sourceTransform === 'function') {
       const buffer = b4a.from(src)
-      const transformed = await opts.sourceTransform(buffer, name)
+      const transformed = await this.sourceTransform(buffer, name)
       if (transformed !== null) {
         return transformed
       }
@@ -114,6 +116,7 @@ class ScriptLinker {
 
   async warmup (entryPoint, opts) {
     await this._rw.write.lock()
+    if (opts && opts.sourceTransform) this.sourceTransform = opts.sourceTransform
 
     try {
       return await this._warmup(entryPoint, opts)
@@ -166,7 +169,7 @@ class ScriptLinker {
     if (opts && opts.filter && !opts.filter(filename)) return
 
     if (filename.endsWith('.html')) {
-      const src = await this._readFile(filename, true, opts)
+      const src = await this._readFile(filename, true)
       if (src === null) return
 
       const entries = sniffJS(b4a.toString(src)) // could be improved to sniff custom urls also
@@ -217,7 +220,7 @@ class ScriptLinker {
     let m = this.modules.get(filename)
 
     if (m) {
-      if (this._warmups === 0 || m.warmup !== this._warmups || forceRefresh) await m.refresh(opts)
+      if (this._warmups === 0 || m.warmup !== this._warmups || forceRefresh) await m.refresh()
       return m
     }
 
@@ -225,7 +228,7 @@ class ScriptLinker {
     this.modules.set(m.filename, m)
 
     try {
-      await m.refresh(opts)
+      await m.refresh()
       return m
     } catch (err) {
       this.modules.delete(m.filename)
@@ -235,8 +238,9 @@ class ScriptLinker {
 
   async transform ({ isSourceMap, isImport, transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs', filename, resolve, dirname, refresh, sourceTransform }) {
     if (!filename) filename = await this.resolve(resolve, dirname)
+    if (sourceTransform) this.sourceTransform = sourceTransform
 
-    const mod = await this.load(filename, { refresh, sourceTransform })
+    const mod = await this.load(filename, { refresh })
 
     if (transform === 'cjs') return mod.toCJS()
     if (transform === 'map') return mod.generateSourceMap()
