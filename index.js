@@ -171,7 +171,8 @@ class ScriptLinker {
       const src = await this._readFile(filename, true)
       if (src === null) return
 
-      const entries = sniffJS(b4a.toString(src)) // could be improved to sniff custom urls also
+      const matcher = opts.identify || identify
+      const entries = sniff(b4a.toString(src), matcher) // could be improved to sniff custom urls also
       const dir = unixresolve(filename, '..')
 
       for (const entry of entries) {
@@ -279,27 +280,28 @@ function isCustomScheme (str) {
   return /^[a-z][a-z0-9]+:/i.test(str)
 }
 
-function sniffJS (src) {
-  const s1 = src.match(/"[^"]+"/ig)
-  const s2 = src.match(/'[^']+'/ig)
+function sniff (src, entries = identify) {
+  const doubles = src.match(/"[^"]+"/ig)
+  const singles = src.match(/'[^']+'/ig)
+  return entries(doubles, singles).filter(e => !isCustomScheme(e))
+}
 
+function identify (doubles, singles) {
   const entries = []
-
-  if (s1) {
-    for (const s of s1) {
-      if (/\.(m|c)?jsx?"$/.test(s)) {
+  if (doubles) {
+    for (const s of doubles) {
+      if (/\.(m|c)?js"$/.test(s)) {
         entries.push(s.slice(1, -1))
       }
     }
   }
 
-  if (s2) {
-    for (const s of s2) {
-      if (/\.(m|c)?jsx?'$/.test(s)) {
+  if (singles) {
+    for (const s of singles) {
+      if (/\.(m|c)?js'$/.test(s)) {
         entries.push(s.slice(1, -1))
       }
     }
   }
-
-  return entries.filter(e => !isCustomScheme(e))
+  return entries
 }
