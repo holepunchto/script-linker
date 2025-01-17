@@ -121,9 +121,12 @@ Options include:
     // note that isConsole means that this is the url used by a source map
   },
   // (optional) map an import BEFORE it is passed to resolve
-  mapImport (id, dirname) { }
+  mapImport (id, dirname) { },
   // (optional) support named exports in cjs imported from esm and
   // also speed up cjs require in general
+
+  // (optional) apply additional transforms to a file before parsing
+  async sourceTransform (buffer, filename) { }
 }
 ```
 
