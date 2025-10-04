@@ -11,22 +11,25 @@ const runtime = require('./runtime')
 const link = require('./link')
 
 class ScriptLinker {
-  constructor (drive, {
-    map = d.map,
-    mapImport = d.mapImport,
-    mapResolve = null,
-    mapPath = d.mapPath,
-    builtins = d.builtins,
-    linkSourceMaps = d.linkSourceMaps,
-    defaultType = d.type,
-    cacheSize = d.cacheSize,
-    symbol = d.symbol,
-    protocol = d.protocol,
-    runtimes = ['node'],
-    bare = false,
-    sourceOverwrites,
-    imports
-  } = {}) {
+  constructor(
+    drive,
+    {
+      map = d.map,
+      mapImport = d.mapImport,
+      mapResolve = null,
+      mapPath = d.mapPath,
+      builtins = d.builtins,
+      linkSourceMaps = d.linkSourceMaps,
+      defaultType = d.type,
+      cacheSize = d.cacheSize,
+      symbol = d.symbol,
+      protocol = d.protocol,
+      runtimes = ['node'],
+      bare = false,
+      sourceOverwrites,
+      imports
+    } = {}
+  ) {
     this.map = map
     this.mapImport = mapImport
     this.mapResolve = mapResolve
@@ -46,13 +49,16 @@ class ScriptLinker {
     this._warmups = 0
     this._importRuntimes = new Set(['module', 'import', ...runtimes])
     this._requireRuntimes = new Set(['require', ...runtimes])
-    this._ns = bare ? '' : 'global[Symbol.for(\'' + symbol + '\')].'
+    this._ns = bare ? '' : "global[Symbol.for('" + symbol + "')]."
   }
 
-  async _readFile (nodeOrName, error) {
+  async _readFile(nodeOrName, error) {
     const name = typeof nodeOrName === 'string' ? nodeOrName : nodeOrName.key
 
-    if (this.sourceOverwrites !== null && Object.hasOwn(this.sourceOverwrites, name)) {
+    if (
+      this.sourceOverwrites !== null &&
+      Object.hasOwn(this.sourceOverwrites, name)
+    ) {
       const overwrite = this.sourceOverwrites[name]
       return typeof overwrite === 'string' ? b4a.from(overwrite) : overwrite
     }
@@ -63,17 +69,17 @@ class ScriptLinker {
     return src
   }
 
-  async _isFile (name) {
+  async _isFile(name) {
     const node = await this.drive.entry(name)
     return node !== null && !!(node.value && node.value.blob)
   }
 
-  async _isDirectory (name) {
+  async _isDirectory(name) {
     const node = await this.drive.entry(name)
     return node === null
   }
 
-  _mapImportPostResolve (req, basedir) {
+  _mapImportPostResolve(req, basedir) {
     req = this.mapImport(req, basedir)
     if (isCustomScheme(req)) return req
     return this.map(req, {
@@ -85,8 +91,10 @@ class ScriptLinker {
     })
   }
 
-  async resolvePackageJSON (filename, { directory = false } = {}) {
-    let dirname = directory ? unixresolve(filename) : unixresolve(filename, '..')
+  async resolvePackageJSON(filename, { directory = false } = {}) {
+    let dirname = directory
+      ? unixresolve(filename)
+      : unixresolve(filename, '..')
     while (true) {
       const pkg = unixresolve(dirname, 'package.json')
       if (await this._isFile(pkg)) return pkg
@@ -96,7 +104,7 @@ class ScriptLinker {
     }
   }
 
-  async readPackageJSON (filename, { directory = false } = {}) {
+  async readPackageJSON(filename, { directory = false } = {}) {
     const pkg = await this.resolvePackageJSON(filename, { directory })
     if (pkg === null) return null
     const src = await this._readFile(pkg, false)
@@ -104,7 +112,7 @@ class ScriptLinker {
     return JSON.parse(typeof src === 'string' ? src : b4a.from(src))
   }
 
-  async warmup (entryPoint, opts) {
+  async warmup(entryPoint, opts) {
     await this._rw.write.lock()
 
     try {
@@ -114,13 +122,18 @@ class ScriptLinker {
     }
   }
 
-  async _warmup (entryPoint, opts) {
+  async _warmup(entryPoint, opts) {
     const modules = new Map()
     const warmups = ++this._warmups
 
     opts = { ...opts, noLock: true }
 
-    for await (const { isImport, module } of this.dependencies(entryPoint, opts, new Set(), modules)) {
+    for await (const { isImport, module } of this.dependencies(
+      entryPoint,
+      opts,
+      new Set(),
+      modules
+    )) {
       if (isImport && module.type === 'commonjs') module.parseCJSExports() // warm this up
     }
 
@@ -134,7 +147,11 @@ class ScriptLinker {
         let target = modules.get(from.output)
 
         // if this is a simple module forward, forward the info
-        while (target && target.type === 'module' && target.rexports.length === 1) {
+        while (
+          target &&
+          target.type === 'module' &&
+          target.rexports.length === 1
+        ) {
           target = modules.get(target.rexports[0])
         }
 
@@ -148,9 +165,16 @@ class ScriptLinker {
     return modules
   }
 
-  async * dependencies (filename, opts, visited = new Set(), modules = new Map(), type = null) {
+  async *dependencies(
+    filename,
+    opts,
+    visited = new Set(),
+    modules = new Map(),
+    type = null
+  ) {
     if (Array.isArray(filename)) {
-      for (const f of filename) yield * this.dependencies(f, opts, visited, modules, type)
+      for (const f of filename)
+        yield* this.dependencies(f, opts, visited, modules, type)
       return
     }
 
@@ -166,7 +190,13 @@ class ScriptLinker {
 
       for (const entry of entries) {
         try {
-          yield * this.dependencies(unixresolve(dir, entry), opts, visited, modules, null)
+          yield* this.dependencies(
+            unixresolve(dir, entry),
+            opts,
+            visited,
+            modules,
+            null
+          )
         } catch {
           continue // prob just an invalid js file we hit
         }
@@ -175,11 +205,11 @@ class ScriptLinker {
       return
     }
 
-    const m = modules.get(filename) || await this.load(filename, opts)
+    const m = modules.get(filename) || (await this.load(filename, opts))
     modules.set(filename, m)
 
     const isImport = (type || m.type) === 'module'
-    const id = ((opts && opts.anyContext) ? '-' : (isImport ? 'i' : 'c')) + filename
+    const id = (opts && opts.anyContext ? '-' : isImport ? 'i' : 'c') + filename
 
     if (visited.has(id)) return
     visited.add(id)
@@ -187,11 +217,18 @@ class ScriptLinker {
     yield { isImport, module: m }
 
     for (const r of m.resolutions) {
-      if (r.output) yield * this.dependencies(r.output, opts, visited, modules, r.isImport ? 'module' : 'commonjs')
+      if (r.output)
+        yield* this.dependencies(
+          r.output,
+          opts,
+          visited,
+          modules,
+          r.isImport ? 'module' : 'commonjs'
+        )
     }
   }
 
-  async load (filename, opts) {
+  async load(filename, opts) {
     if (opts && opts.noLock === true) return this._load(filename, opts)
 
     await this._rw.read.lock()
@@ -203,13 +240,14 @@ class ScriptLinker {
     }
   }
 
-  async _load (filename, opts) {
+  async _load(filename, opts) {
     const forceRefresh = !!opts && opts.refresh === true
 
     let m = this.modules.get(filename)
 
     if (m) {
-      if (this._warmups === 0 || m.warmup !== this._warmups || forceRefresh) await m.refresh()
+      if (this._warmups === 0 || m.warmup !== this._warmups || forceRefresh)
+        await m.refresh()
       return m
     }
 
@@ -225,7 +263,15 @@ class ScriptLinker {
     }
   }
 
-  async transform ({ isSourceMap, isImport, transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs', filename, resolve, dirname, refresh }) {
+  async transform({
+    isSourceMap,
+    isImport,
+    transform = isImport ? 'esm' : isSourceMap ? 'map' : 'cjs',
+    filename,
+    resolve,
+    dirname,
+    refresh
+  }) {
     if (!filename) filename = await this.resolve(resolve, dirname)
 
     const mod = await this.load(filename, { refresh })
@@ -238,7 +284,11 @@ class ScriptLinker {
     return mod.source
   }
 
-  async resolve (req, basedir, { transform = 'esm', isImport = transform === 'esm' } = {}) {
+  async resolve(
+    req,
+    basedir,
+    { transform = 'esm', isImport = transform === 'esm' } = {}
+  ) {
     if (this.mapResolve) req = this.mapResolve(req, basedir)
     if (isImport && isCustomScheme(req)) return req
     if (this.builtins.has(req)) return req
@@ -246,16 +296,22 @@ class ScriptLinker {
     if (compat.isPreact(req)) isImport = false
 
     const runtimes = isImport ? this._importRuntimes : this._requireRuntimes
-    const resolveOpts = { basedir, extensions: ['.js', '.mjs', '.cjs', '.json'], runtimes: Array.from(runtimes), sourceOverwrites: this.sourceOverwrites, imports: this.imports }
+    const resolveOpts = {
+      basedir,
+      extensions: ['.js', '.mjs', '.cjs', '.json'],
+      runtimes: Array.from(runtimes),
+      sourceOverwrites: this.sourceOverwrites,
+      imports: this.imports
+    }
 
     return resolveModule(this.drive, req, resolveOpts)
   }
 
-  async bundle (filename, opts) {
+  async bundle(filename, opts) {
     return bundle(this, filename, opts)
   }
 
-  static runtime (opts) {
+  static runtime(opts) {
     return runtime(opts)
   }
 }
@@ -265,13 +321,13 @@ ScriptLinker.link = link
 
 module.exports = ScriptLinker
 
-function isCustomScheme (str) {
+function isCustomScheme(str) {
   return /^[a-z][a-z0-9]+:/i.test(str)
 }
 
-function sniffJS (src) {
-  const s1 = src.match(/"[^"]+"/ig)
-  const s2 = src.match(/'[^']+'/ig)
+function sniffJS(src) {
+  const s1 = src.match(/"[^"]+"/gi)
+  const s2 = src.match(/'[^']+'/gi)
 
   const entries = []
 
@@ -291,5 +347,5 @@ function sniffJS (src) {
     }
   }
 
-  return entries.filter(e => !isCustomScheme(e))
+  return entries.filter((e) => !isCustomScheme(e))
 }

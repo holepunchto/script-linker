@@ -25,7 +25,7 @@ ipcMain.on('warmup', function (sender, id, batch) {
 
 const s = new ScriptLinker({
   builtins: require('./builtins'),
-  warmup (batch) {
+  warmup(batch) {
     return new Promise((resolve, reject) => {
       console.log('sending batch (length = ' + batch.length + ')')
       id++
@@ -33,7 +33,7 @@ const s = new ScriptLinker({
       webContents.send('warmup', id, batch)
     })
   },
-  readFile (name) {
+  readFile(name) {
     return fs.promises.readFile(path.join(__dirname, 'fixtures', name))
   }
 })
@@ -46,9 +46,11 @@ app.on('ready', function () {
     if (request.url.endsWith('/index.html')) {
       sendWarmup = null
 
-      const out = await fs.promises.readFile(path.join(__dirname, 'fixtures/index.html'))
+      const out = await fs.promises.readFile(
+        path.join(__dirname, 'fixtures/index.html')
+      )
       const data = new Readable({
-        read () {
+        read() {
           data.push(out)
           data.push(null)
         }
@@ -68,17 +70,19 @@ app.on('ready', function () {
     }
 
     const u = ScriptLinker.link.parse(request.url)
-    if (u.transform === 'app' && request.url.endsWith('.js')) u.transform = 'esm'
+    if (u.transform === 'app' && request.url.endsWith('.js'))
+      u.transform = 'esm'
 
     // before sending any esm, make sure we warmup the cjs
     if (u.transform === 'esm') await sendWarmup
 
-    const type = u.transform === 'map' ? 'application/json' : 'application/javascript'
+    const type =
+      u.transform === 'map' ? 'application/json' : 'application/javascript'
 
     const out = await s.transform(u)
 
     const data = new Readable({
-      read () {
+      read() {
         data.push(out)
         data.push(null)
       }
@@ -93,10 +97,12 @@ app.on('ready', function () {
 
   protocol.registerStreamProtocol('resolve', async function (request, reply) {
     const u = ScriptLinker.link.parse(request.url)
-    const r = u.filename || await s.resolve(u.resolve, u.dirname, { transform: u.transform })
+    const r =
+      u.filename ||
+      (await s.resolve(u.resolve, u.dirname, { transform: u.transform }))
 
     const data = new Readable({
-      read () {
+      read() {
         data.push(r)
         data.push(null)
       }

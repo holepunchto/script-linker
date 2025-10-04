@@ -3,7 +3,9 @@ const crypto = require('crypto')
 const test = require('brittle')
 const { create } = require('./helpers/index.js')
 
-const NO_PKG_PATH = path.join(`/${crypto.randomBytes(32).toString('hex')}/${crypto.randomBytes(32).toString('hex')}/`)
+const NO_PKG_PATH = path.join(
+  `/${crypto.randomBytes(32).toString('hex')}/${crypto.randomBytes(32).toString('hex')}/`
+)
 const CJS_MALFORMED_PATH = '/fixtures/cjs-malformed-package-json'
 const ESM_MALFORMED_PATH = '/fixtures/esm-malformed-package-json'
 
@@ -15,7 +17,9 @@ test('it returns null if no package.json on the path', async function (t) {
 test('it returns null for malformed package.json (cjs)', async function (t) {
   const linker = create(__dirname)
 
-  const jsonf = linker.readPackageJSON(path.join(CJS_MALFORMED_PATH, 'package.json'))
+  const jsonf = linker.readPackageJSON(
+    path.join(CJS_MALFORMED_PATH, 'package.json')
+  )
   await t.exception.all(async () => await jsonf)
 
   const jsond = linker.readPackageJSON(CJS_MALFORMED_PATH, { directory: true })
@@ -25,7 +29,9 @@ test('it returns null for malformed package.json (cjs)', async function (t) {
 test('it returns null for malformed package.json (esm)', async function (t) {
   const linker = create(__dirname)
 
-  const jsonf = linker.readPackageJSON(path.join(ESM_MALFORMED_PATH, 'package.json'))
+  const jsonf = linker.readPackageJSON(
+    path.join(ESM_MALFORMED_PATH, 'package.json')
+  )
   await t.exception.all(async () => await jsonf)
 
   const jsond = linker.readPackageJSON(ESM_MALFORMED_PATH, { directory: true })
@@ -68,7 +74,10 @@ test('load a module with a malformed package.json (esm)', async function (t) {
   const mod = await linker.load(path.join(ESM_MALFORMED_PATH, 'index.js'))
   t.is(mod.packageMalformed, true)
 
-  await t.exception.all(async () => await mod.toESM(), /Invalid package config while importing \/fixtures\/esm-malformed-package-json\/index.js/)
+  await t.exception.all(
+    async () => await mod.toESM(),
+    /Invalid package config while importing \/fixtures\/esm-malformed-package-json\/index.js/
+  )
 
   try {
     await mod.toESM()
