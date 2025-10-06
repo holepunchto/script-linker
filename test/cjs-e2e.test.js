@@ -47,18 +47,10 @@ test('map should be able to rewrite urls', ({ is, ok, not, teardown }) => {
   const myRequire = runtime.createRequire(path.join(__dirname))
   not(myRequire('./test/fixtures/cjs-with-exports'), 'an export')
   is(myRequire('./test/fixtures/cjs-with-exports')(0), 1)
-  is(
-    xformed.replace('cjs-with-imports-and-exports', 'cjs-with-exports'),
-    original
-  )
+  is(xformed.replace('cjs-with-imports-and-exports', 'cjs-with-exports'), original)
 })
 
-test('by default it should resolve builtin modules', ({
-  is,
-  ok,
-  fail,
-  teardown
-}) => {
+test('by default it should resolve builtin modules', ({ is, ok, fail, teardown }) => {
   const opts = {
     builtins: {
       has(x) {
@@ -83,12 +75,7 @@ test('by default it should resolve builtin modules', ({
   ok(fs1)
 })
 
-test('it should allow custom builtin module resolution', ({
-  is,
-  fail,
-  teardown,
-  exception
-}) => {
+test('it should allow custom builtin module resolution', ({ is, fail, teardown, exception }) => {
   const opts = {
     resolveSync(...args) {
       if (args[0] === 'fs') throw new Error('err on fs')
@@ -106,18 +93,11 @@ test('it should allow custom builtin module resolution', ({
     }
   }
   const runtime = ScriptLinker.runtime(opts)
-  const myRequire = runtime.createRequire(
-    path.join(__dirname, './fixtures/cjs-with-exports')
-  )
+  const myRequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
   exception(() => myRequire('fs'))
 })
 
-test('it should support custom source compilation', ({
-  is,
-  fail,
-  teardown,
-  exception
-}) => {
+test('it should support custom source compilation', ({ is, fail, teardown, exception }) => {
   const resolve = path.join(__dirname, './fixtures/cjs-with-exports/index.js')
 
   const opts = {
@@ -129,16 +109,11 @@ test('it should support custom source compilation', ({
     },
     compile(...args) {
       const [source, ...rest] = args.reverse()
-      const nargs = [
-        ...rest.reverse(),
-        source.replace('an export', 'AN EXPORT')
-      ]
+      const nargs = [...rest.reverse(), source.replace('an export', 'AN EXPORT')]
       return ScriptLinker.defaults.compile(...nargs)
     }
   }
   const runtime = ScriptLinker.runtime(opts)
-  const myRequire = runtime.createRequire(
-    path.join(__dirname, './fixtures/cjs-with-exports')
-  )
+  const myRequire = runtime.createRequire(path.join(__dirname, './fixtures/cjs-with-exports'))
   is(myRequire('./cjs-with-exports'), 'AN EXPORT')
 })

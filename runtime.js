@@ -26,9 +26,7 @@ module.exports = function runtime({
           const r = resolveImport(dirname, req)
           return doImport(r)
         } catch {
-          return Promise.reject(
-            new Error(`Cannot find package '${req}' imported from ${filename}`)
-          )
+          return Promise.reject(new Error(`Cannot find package '${req}' imported from ${filename}`))
         }
       }
     },
@@ -75,16 +73,13 @@ module.exports = function runtime({
 
   function resolveImport(dirname, req) {
     const isBuiltin = builtins.has(req)
-    return map(
-      isBuiltin ? req : resolveSync(req, dirname, { isImport: true }),
-      {
-        protocol,
-        isImport: true,
-        isBuiltin,
-        isSourceMap: false,
-        isConsole: false
-      }
-    )
+    return map(isBuiltin ? req : resolveSync(req, dirname, { isImport: true }), {
+      protocol,
+      isImport: true,
+      isBuiltin,
+      isSourceMap: false,
+      isConsole: false
+    })
   }
 
   function getExtension(filename) {
@@ -120,11 +115,7 @@ module.exports = function runtime({
       if (opts && opts.resolved) return request
 
       try {
-        if (
-          opts &&
-          opts.map &&
-          Object.prototype.hasOwnProperty.call(opts.map, request)
-        ) {
+        if (opts && opts.map && Object.prototype.hasOwnProperty.call(opts.map, request)) {
           const r = opts.map[request]
           if (r) return r
         } else {
@@ -134,9 +125,7 @@ module.exports = function runtime({
         }
       } catch {}
 
-      throw new Error(
-        `Cannot find module '${request}' required from ${parent.id}`
-      )
+      throw new Error(`Cannot find module '${request}' required from ${parent.id}`)
     }
 
     Module._load = function (request, parent, isMain, opts) {
@@ -189,9 +178,7 @@ module.exports = function runtime({
       if (source.startsWith('/* @scriptlinker-resolutions ')) {
         const e = source.indexOf('*/\n')
         if (e > -1) {
-          map = JSON.parse(
-            source.slice('/* @scriptlinker-resolutions '.length, e)
-          )
+          map = JSON.parse(source.slice('/* @scriptlinker-resolutions '.length, e))
           source = source.slice(e + 3)
         }
       }
@@ -212,8 +199,7 @@ module.exports = function runtime({
 
     Module.prototype.load = function (filename, opts) {
       this.filename = filename
-      const ext =
-        Module._extensions[getExtension(filename)] || Module._extensions['.js']
+      const ext = Module._extensions[getExtension(filename)] || Module._extensions['.js']
       ext(this, filename, opts)
       this.loaded = true
     }

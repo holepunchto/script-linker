@@ -55,10 +55,7 @@ class ScriptLinker {
   async _readFile(nodeOrName, error) {
     const name = typeof nodeOrName === 'string' ? nodeOrName : nodeOrName.key
 
-    if (
-      this.sourceOverwrites !== null &&
-      Object.hasOwn(this.sourceOverwrites, name)
-    ) {
+    if (this.sourceOverwrites !== null && Object.hasOwn(this.sourceOverwrites, name)) {
       const overwrite = this.sourceOverwrites[name]
       return typeof overwrite === 'string' ? b4a.from(overwrite) : overwrite
     }
@@ -92,9 +89,7 @@ class ScriptLinker {
   }
 
   async resolvePackageJSON(filename, { directory = false } = {}) {
-    let dirname = directory
-      ? unixresolve(filename)
-      : unixresolve(filename, '..')
+    let dirname = directory ? unixresolve(filename) : unixresolve(filename, '..')
     while (true) {
       const pkg = unixresolve(dirname, 'package.json')
       if (await this._isFile(pkg)) return pkg
@@ -147,11 +142,7 @@ class ScriptLinker {
         let target = modules.get(from.output)
 
         // if this is a simple module forward, forward the info
-        while (
-          target &&
-          target.type === 'module' &&
-          target.rexports.length === 1
-        ) {
+        while (target && target.type === 'module' && target.rexports.length === 1) {
           target = modules.get(target.rexports[0])
         }
 
@@ -165,16 +156,9 @@ class ScriptLinker {
     return modules
   }
 
-  async *dependencies(
-    filename,
-    opts,
-    visited = new Set(),
-    modules = new Map(),
-    type = null
-  ) {
+  async *dependencies(filename, opts, visited = new Set(), modules = new Map(), type = null) {
     if (Array.isArray(filename)) {
-      for (const f of filename)
-        yield* this.dependencies(f, opts, visited, modules, type)
+      for (const f of filename) yield* this.dependencies(f, opts, visited, modules, type)
       return
     }
 
@@ -190,13 +174,7 @@ class ScriptLinker {
 
       for (const entry of entries) {
         try {
-          yield* this.dependencies(
-            unixresolve(dir, entry),
-            opts,
-            visited,
-            modules,
-            null
-          )
+          yield* this.dependencies(unixresolve(dir, entry), opts, visited, modules, null)
         } catch {
           continue // prob just an invalid js file we hit
         }
@@ -246,8 +224,7 @@ class ScriptLinker {
     let m = this.modules.get(filename)
 
     if (m) {
-      if (this._warmups === 0 || m.warmup !== this._warmups || forceRefresh)
-        await m.refresh()
+      if (this._warmups === 0 || m.warmup !== this._warmups || forceRefresh) await m.refresh()
       return m
     }
 
@@ -284,11 +261,7 @@ class ScriptLinker {
     return mod.source
   }
 
-  async resolve(
-    req,
-    basedir,
-    { transform = 'esm', isImport = transform === 'esm' } = {}
-  ) {
+  async resolve(req, basedir, { transform = 'esm', isImport = transform === 'esm' } = {}) {
     if (this.mapResolve) req = this.mapResolve(req, basedir)
     if (isImport && isCustomScheme(req)) return req
     if (this.builtins.has(req)) return req

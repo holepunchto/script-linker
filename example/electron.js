@@ -8,9 +8,7 @@ app.commandLine.appendSwitch('disable-http-cache')
 
 let webContents = null
 
-protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { standard: true } }
-])
+protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true } }])
 
 let id = 0
 const pending = new Map()
@@ -46,9 +44,7 @@ app.on('ready', function () {
     if (request.url.endsWith('/index.html')) {
       sendWarmup = null
 
-      const out = await fs.promises.readFile(
-        path.join(__dirname, 'fixtures/index.html')
-      )
+      const out = await fs.promises.readFile(path.join(__dirname, 'fixtures/index.html'))
       const data = new Readable({
         read() {
           data.push(out)
@@ -70,14 +66,12 @@ app.on('ready', function () {
     }
 
     const u = ScriptLinker.link.parse(request.url)
-    if (u.transform === 'app' && request.url.endsWith('.js'))
-      u.transform = 'esm'
+    if (u.transform === 'app' && request.url.endsWith('.js')) u.transform = 'esm'
 
     // before sending any esm, make sure we warmup the cjs
     if (u.transform === 'esm') await sendWarmup
 
-    const type =
-      u.transform === 'map' ? 'application/json' : 'application/javascript'
+    const type = u.transform === 'map' ? 'application/json' : 'application/javascript'
 
     const out = await s.transform(u)
 
@@ -97,9 +91,7 @@ app.on('ready', function () {
 
   protocol.registerStreamProtocol('resolve', async function (request, reply) {
     const u = ScriptLinker.link.parse(request.url)
-    const r =
-      u.filename ||
-      (await s.resolve(u.resolve, u.dirname, { transform: u.transform }))
+    const r = u.filename || (await s.resolve(u.resolve, u.dirname, { transform: u.transform }))
 
     const data = new Readable({
       read() {

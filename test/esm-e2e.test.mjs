@@ -11,9 +11,7 @@ const __dirname = path.dirname(__filename)
 test('linker can import', async ({ is, fail, ok }) => {
   const doImport = (x) => {
     return import(
-      pathToFileURL(
-        path.join(__dirname, './fixtures/esm-with-exports', 'index.js')
-      ).href
+      pathToFileURL(path.join(__dirname, './fixtures/esm-with-exports', 'index.js')).href
     )
   }
 
@@ -35,12 +33,7 @@ test('linker can import', async ({ is, fail, ok }) => {
   is(exp, 'an export')
 })
 
-test('map should be able to rewrite urls', async ({
-  is,
-  ok,
-  not,
-  teardown
-}) => {
+test('map should be able to rewrite urls', async ({ is, ok, not, teardown }) => {
   let original = null
   let xformed = null
 
@@ -64,19 +57,11 @@ test('map should be able to rewrite urls', async ({
     doImport
   )
   const { default: exp } = await myImport('./esm-with-exports')
-  is(
-    xformed.replace('cjs-with-imports-and-exports', 'esm-with-exports'),
-    original
-  )
+  is(xformed.replace('cjs-with-imports-and-exports', 'esm-with-exports'), original)
   not(exp, 'an export')
 })
 
-test('by default it should resolve builtin modules', async ({
-  is,
-  ok,
-  fail,
-  teardown
-}) => {
+test('by default it should resolve builtin modules', async ({ is, ok, fail, teardown }) => {
   const doImport = (x) => {
     return import('fs')
   }
@@ -113,9 +98,7 @@ test('it should allow custom builtin module resolution', async ({
 }) => {
   const doImport = (x) => {
     return import(
-      pathToFileURL(
-        path.join(__dirname, './fixtures/esm-with-exports', 'index.js')
-      ).href
+      pathToFileURL(path.join(__dirname, './fixtures/esm-with-exports', 'index.js')).href
     )
   }
 
@@ -155,16 +138,10 @@ test('it should allow custom builtin module resolution', async ({
   exception(() => myImport('fs'))
 })
 
-test('it should support custom source compilation', async ({
-  is,
-  ok,
-  teardown
-}) => {
+test('it should support custom source compilation', async ({ is, ok, teardown }) => {
   const opts = {
     getSync(url) {
-      return fs.readFileSync(
-        path.join(__dirname, './fixtures/esm-with-exports', 'index.js')
-      )
+      return fs.readFileSync(path.join(__dirname, './fixtures/esm-with-exports', 'index.js'))
     },
     resolveSync(request, basedir) {
       return path.join(basedir, request, 'index.js')
@@ -174,9 +151,7 @@ test('it should support custom source compilation', async ({
   const myImport = runtime.createImport(
     path.join(__dirname, './fixtures/esm-with-exports'),
     (r) => {
-      return import(
-        'data:text/javascript,' + 'const c = "AN EXPORT"; export default c'
-      )
+      return import('data:text/javascript,' + 'const c = "AN EXPORT"; export default c')
     }
   )
   const { default: exp } = await myImport('./esm-with-exports')

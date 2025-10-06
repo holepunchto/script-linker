@@ -17,9 +17,7 @@ test('it returns null if no package.json on the path', async function (t) {
 test('it returns null for malformed package.json (cjs)', async function (t) {
   const linker = create(__dirname)
 
-  const jsonf = linker.readPackageJSON(
-    path.join(CJS_MALFORMED_PATH, 'package.json')
-  )
+  const jsonf = linker.readPackageJSON(path.join(CJS_MALFORMED_PATH, 'package.json'))
   await t.exception.all(async () => await jsonf)
 
   const jsond = linker.readPackageJSON(CJS_MALFORMED_PATH, { directory: true })
@@ -29,9 +27,7 @@ test('it returns null for malformed package.json (cjs)', async function (t) {
 test('it returns null for malformed package.json (esm)', async function (t) {
   const linker = create(__dirname)
 
-  const jsonf = linker.readPackageJSON(
-    path.join(ESM_MALFORMED_PATH, 'package.json')
-  )
+  const jsonf = linker.readPackageJSON(path.join(ESM_MALFORMED_PATH, 'package.json'))
   await t.exception.all(async () => await jsonf)
 
   const jsond = linker.readPackageJSON(ESM_MALFORMED_PATH, { directory: true })

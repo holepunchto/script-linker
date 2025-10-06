@@ -30,9 +30,7 @@ test('it loads builtins', async function (t) {
 
   // domain mutually exclusive w brittle through uncaught exception capture callback registration,
   // repl mutually exclusive w brittle through domain
-  const mods = Module.builtinModules.filter(
-    (name) => !['domain', 'repl'].includes(name)
-  )
+  const mods = Module.builtinModules.filter((name) => !['domain', 'repl'].includes(name))
   for (const name of mods) {
     t.is((await sl.load(name)).filename, name)
   }
@@ -86,12 +84,7 @@ test('(cjs) it converts to JSON if .json', async function (t) {
   const sl = create(__dirname)
   const mod = await sl.load('/fixtures/cjs/package.json')
   const json = await mod.toCJS()
-  t.is(
-    json,
-    (
-      await fs.readFile(unixresolve(__dirname, './fixtures/cjs/package.json'))
-    ).toString()
-  )
+  t.is(json, (await fs.readFile(unixresolve(__dirname, './fixtures/cjs/package.json'))).toString())
 })
 
 test('(esm) it finds package.json by filename', async function (t) {
@@ -125,9 +118,7 @@ test('(esm) it loads module', async function (t) {
   t.is(mod.package.name, (await sl.readPackageJSON(filename)).name)
   t.is(
     mod.source,
-    (
-      await fs.readFile(unixresolve(__dirname, './fixtures/esm/index.js'))
-    ).toString()
+    (await fs.readFile(unixresolve(__dirname, './fixtures/esm/index.js'))).toString()
   )
   t.is(mod.resolutions.length, 2)
   t.ok(mod.resolutions.some((r) => r.output.includes('dep-a')))
@@ -144,10 +135,7 @@ test('(esm) it does not try to resolve custom protocol paths', async function (t
   const sl = create(__dirname)
 
   const filename = '/fixtures/esm-custom-scheme/index.js'
-  const filepath = unixresolve(
-    __dirname,
-    './fixtures/esm-custom-scheme/index.js'
-  )
+  const filepath = unixresolve(__dirname, './fixtures/esm-custom-scheme/index.js')
 
   const mod = await sl.load(filename)
   t.is(mod.resolutions.length, 8, 'fixture has 8 custom protocols')
