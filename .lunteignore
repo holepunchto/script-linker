@@ -1,0 +1,3 @@
+test/fixtures/
+test/cjs-e2e.test.js
+test/esm-e2e.test.mjs

@@ -10,8 +10,9 @@ const extra = [
 
 module.exports = {
   has(req) {
-    if (builtinModules === null)
+    if (builtinModules === null) {
       builtinModules = (require('module').builtinModules || []).concat(extra)
+    }
     return builtinModules.includes(req)
   },
   get(req) {
@@ -19,8 +20,9 @@ module.exports = {
     return (require.builtinRequire || require)(req)
   },
   keys() {
-    if (builtinModules === null)
+    if (builtinModules === null) {
       builtinModules = (require('module').builtinModules || []).concat(extra)
+    }
     return builtinModules.concat()
   }
 }

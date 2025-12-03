@@ -53,11 +53,6 @@ test('resolve builtin module name correctly (slash added)', async function (t) {
     if (!first) first = dep
   }
   t.alike(first.module.resolutions, [
-    {
-      isImport: false,
-      position: null,
-      input: 'fs/promises',
-      output: 'fs/promises'
-    }
+    { isImport: false, position: null, input: 'fs/promises', output: 'fs/promises' }
   ])
 })

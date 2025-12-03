@@ -21,7 +21,6 @@ class ScriptLinker {
       builtins = d.builtins,
       linkSourceMaps = d.linkSourceMaps,
       defaultType = d.type,
-      cacheSize = d.cacheSize,
       symbol = d.symbol,
       protocol = d.protocol,
       runtimes = ['node'],
@@ -195,7 +194,7 @@ class ScriptLinker {
     yield { isImport, module: m }
 
     for (const r of m.resolutions) {
-      if (r.output)
+      if (r.output) {
         yield* this.dependencies(
           r.output,
           opts,
@@ -203,6 +202,7 @@ class ScriptLinker {
           modules,
           r.isImport ? 'module' : 'commonjs'
         )
+      }
     }
   }
 
