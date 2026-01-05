@@ -4,16 +4,16 @@ CJS/MJS source loader that can preresolve imports/requires so linking them on ru
 
 Features include:
 
-* Simple transforms (ie all contained on the same line)
-* Source Maps for all transforms so debugging code is easy
-* IO agnostic, bring your own IO
-* Similar CJS/ESM interop like Node.js
-* Cross platform
-* Very fast. More than 100x faster than detective used in browserify.
+- Simple transforms (ie all contained on the same line)
+- Source Maps for all transforms so debugging code is easy
+- IO agnostic, bring your own IO
+- Similar CJS/ESM interop like Node.js
+- Cross platform
+- Very fast. More than 100x faster than detective used in browserify.
 
 ## Usage
 
-``` js
+```js
 const ScriptLinker = require('@holepunchto/script-linker')
 const Localdrive = require('localdrive')
 
@@ -34,10 +34,10 @@ Currently that's done by running
 // Has no nodejs/native deps so can be bundled if preferred.
 
 const r = ScriptLinker.runtime({
-  getSync (url) {
+  getSync(url) {
     // resolve this url synchronously (ie xhr sync or equi), see below for more
   },
-  resolveSync (req, dirname, { isImport }) {
+  resolveSync(req, dirname, { isImport }) {
     // resolve the import/require request ie "./foo.js" or "fs" from the directory passed
   }
 })
@@ -72,12 +72,12 @@ const r = runtime({
   map, // same as below
   mapImport, // same as below
   builtins, // same as below
-  getSync (url) {
+  getSync(url) {
     // synchronously load this url and return the content as a string
     // per default this is an url produced by the links spec above expressing what it wants to load
     // you can make your own url scheme using the map function (see below)
   },
-  resolveSync (req, dirname, { isImport }) {
+  resolveSync(req, dirname, { isImport }) {
     // synchronously resolve this url into the absolute path it represents
     // per default this is an url produced by the links spec above expressing what it wants to resolve
     // you can make your own url scheme using the map function (see below)

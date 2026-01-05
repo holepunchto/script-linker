@@ -30,7 +30,7 @@ test('it loads builtins', async function (t) {
 
   // domain mutually exclusive w brittle through uncaught exception capture callback registration,
   // repl mutually exclusive w brittle through domain
-  const mods = Module.builtinModules.filter((name) => !(['domain', 'repl']).includes(name))
+  const mods = Module.builtinModules.filter((name) => !['domain', 'repl'].includes(name))
   for (const name of mods) {
     t.is((await sl.load(name)).filename, name)
   }
@@ -67,7 +67,7 @@ test('(cjs) it loads module', async function (t) {
   t.is(mod.type, 'commonjs')
   t.is(mod.package.name, (await sl.readPackageJSON(filename)).name)
   t.is(mod.name, mod.package.name)
-  t.is(mod.source, ((await fs.readFile(filepath)).toString()))
+  t.is(mod.source, (await fs.readFile(filepath)).toString())
   t.is(mod.resolutions.length, 2)
   t.ok(mod.resolutions.some((r) => r.output.includes('dep-a')))
   t.ok(mod.resolutions.some((r) => r.output.includes('dep-b')))
@@ -116,7 +116,10 @@ test('(esm) it loads module', async function (t) {
   t.is(mod.builtin, false)
   t.is(mod.type, 'module')
   t.is(mod.package.name, (await sl.readPackageJSON(filename)).name)
-  t.is(mod.source, (await fs.readFile(unixresolve(__dirname, './fixtures/esm/index.js'))).toString())
+  t.is(
+    mod.source,
+    (await fs.readFile(unixresolve(__dirname, './fixtures/esm/index.js'))).toString()
+  )
   t.is(mod.resolutions.length, 2)
   t.ok(mod.resolutions.some((r) => r.output.includes('dep-a')))
   t.ok(mod.resolutions.some((r) => r.output.includes('dep-b')))
@@ -151,7 +154,7 @@ test('converts wasm esm module to url export', async function (t) {
   const mod = await sl.load(filename)
   const link = { transform: 'wasm', ...mod }
   const url = await sl.transform(link)
-  t.is(url, 'export default \'/fixtures/wasm/file.wasm\'')
+  t.is(url, "export default '/fixtures/wasm/file.wasm'")
 
   const source = await sl.transform({ transform: 'app', ...mod })
   t.is('this-is-a-wasm-file', source)

@@ -8,11 +8,11 @@ test('linker can createRequire', ({ is, fail, ok }) => {
   const resolve = path.join(__dirname, './fixtures/cjs-with-exports/index.js')
 
   const opts = {
-    resolveSync (request, basedir) {
+    resolveSync(request, basedir) {
       ok(request.startsWith('./fixtures/cjs-with-exports'))
       return resolve
     },
-    getSync (request) {
+    getSync(request) {
       is(request.replaceAll('%5C', '\\'), 'app://cjs' + resolve)
       return fs.readFileSync(resolve).toString()
     }
@@ -28,16 +28,17 @@ test('map should be able to rewrite urls', ({ is, ok, not, teardown }) => {
   let xformed = null
 
   const opts = {
-    getSync (url) {
+    getSync(url) {
       ok(url.includes('cjs-with-imports-and-exports'))
       if (!xformed) xformed = url
       return fs.readFileSync(url).toString()
     },
-    resolveSync (request, basedir) {
-      if (request === './test/fixtures/cjs-with-exports') return path.join(basedir, request, 'index.js')
+    resolveSync(request, basedir) {
+      if (request === './test/fixtures/cjs-with-exports')
+        return path.join(basedir, request, 'index.js')
       else return path.join(basedir, request)
     },
-    map (x) {
+    map(x) {
       if (!original) original = x
       return x.replace('cjs-with-exports', 'cjs-with-imports-and-exports')
     }
@@ -52,19 +53,23 @@ test('map should be able to rewrite urls', ({ is, ok, not, teardown }) => {
 test('by default it should resolve builtin modules', ({ is, ok, fail, teardown }) => {
   const opts = {
     builtins: {
-      has (x) {
+      has(x) {
         return mod.builtinModules.includes(x)
       },
-      get (x) {
+      get(x) {
         ok(x)
         return require(x)
       },
-      keys () {
+      keys() {
         return mod.builtinModules
       }
     },
-    resolveSync () { fail('resolve: never should be called') },
-    getSync () { fail('get: never should be called') }
+    resolveSync() {
+      fail('resolve: never should be called')
+    },
+    getSync() {
+      fail('get: never should be called')
+    }
   }
   const fs1 = ScriptLinker.runtime(opts).createRequire('/')('fs')
   ok(fs1)
@@ -72,15 +77,19 @@ test('by default it should resolve builtin modules', ({ is, ok, fail, teardown }
 
 test('it should allow custom builtin module resolution', ({ is, fail, teardown, exception }) => {
   const opts = {
-    resolveSync (...args) {
+    resolveSync(...args) {
       if (args[0] === 'fs') throw new Error('err on fs')
     },
-    getSync () { fail('never should be called') },
+    getSync() {
+      fail('never should be called')
+    },
     builtins: {
-      has (x) {
+      has(x) {
         return x.includes('.js')
       },
-      keys () { return [] }
+      keys() {
+        return []
+      }
     }
   }
   const runtime = ScriptLinker.runtime(opts)
@@ -92,13 +101,13 @@ test('it should support custom source compilation', ({ is, fail, teardown, excep
   const resolve = path.join(__dirname, './fixtures/cjs-with-exports/index.js')
 
   const opts = {
-    getSync (url) {
+    getSync(url) {
       return fs.readFileSync(resolve).toString()
     },
-    resolveSync (request, basedir) {
+    resolveSync(request, basedir) {
       return resolve
     },
-    compile (...args) {
+    compile(...args) {
       const [source, ...rest] = args.reverse()
       const nargs = [...rest.reverse(), source.replace('an export', 'AN EXPORT')]
       return ScriptLinker.defaults.compile(...nargs)

@@ -5,7 +5,7 @@ module.exports = {
   create
 }
 
-function create (root) {
+function create(root) {
   const drive = new Localdrive(root || __dirname)
   return new ScriptLinker(drive)
 }

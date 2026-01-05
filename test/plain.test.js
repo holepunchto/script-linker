@@ -12,11 +12,20 @@ test('it should load plain vanilla js modules', async function (t) {
   const mod = await linker.load('/jquery/dist/jquery.js')
   const esm = await mod.toESM()
   const runtime = ScriptLinker.runtime({
-    resolveSync () { return `data:text/javascript,${encodeURIComponent(esm)}` },
-    getSync (name) { return readFileSync(path.resolve(root, '.' + name), 'utf-8') },
-    map (x) { return x }
+    resolveSync() {
+      return `data:text/javascript,${encodeURIComponent(esm)}`
+    },
+    getSync(name) {
+      return readFileSync(path.resolve(root, '.' + name), 'utf-8')
+    },
+    map(x) {
+      return x
+    }
   })
-  const myImport = runtime.createImport(path.resolve(__dirname, '../node_modules/jquery'), (s) => import(s))
+  const myImport = runtime.createImport(
+    path.resolve(__dirname, '../node_modules/jquery'),
+    (s) => import(s)
+  )
 
   const { default: $ } = await myImport('jquery')
   const dom = new JSDOM('<!DOCTYPE html><p id="message">It worked!</p>')
@@ -31,7 +40,9 @@ test('resolve builtin module name correctly', async function (t) {
   for await (const dep of linker.dependencies('/fs.js')) {
     if (!first) first = dep
   }
-  t.alike(first.module.resolutions, [{ isImport: false, position: null, input: 'fs', output: 'fs' }])
+  t.alike(first.module.resolutions, [
+    { isImport: false, position: null, input: 'fs', output: 'fs' }
+  ])
 })
 
 test('resolve builtin module name correctly (slash added)', async function (t) {
@@ -41,5 +52,7 @@ test('resolve builtin module name correctly (slash added)', async function (t) {
   for await (const dep of linker.dependencies('/fs-promises.js')) {
     if (!first) first = dep
   }
-  t.alike(first.module.resolutions, [{ isImport: false, position: null, input: 'fs/promises', output: 'fs/promises' }])
+  t.alike(first.module.resolutions, [
+    { isImport: false, position: null, input: 'fs/promises', output: 'fs/promises' }
+  ])
 })

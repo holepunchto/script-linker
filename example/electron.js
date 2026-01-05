@@ -8,9 +8,7 @@ app.commandLine.appendSwitch('disable-http-cache')
 
 let webContents = null
 
-protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { standard: true } }
-])
+protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true } }])
 
 let id = 0
 const pending = new Map()
@@ -25,7 +23,7 @@ ipcMain.on('warmup', function (sender, id, batch) {
 
 const s = new ScriptLinker({
   builtins: require('./builtins'),
-  warmup (batch) {
+  warmup(batch) {
     return new Promise((resolve, reject) => {
       console.log('sending batch (length = ' + batch.length + ')')
       id++
@@ -33,7 +31,7 @@ const s = new ScriptLinker({
       webContents.send('warmup', id, batch)
     })
   },
-  readFile (name) {
+  readFile(name) {
     return fs.promises.readFile(path.join(__dirname, 'fixtures', name))
   }
 })
@@ -48,7 +46,7 @@ app.on('ready', function () {
 
       const out = await fs.promises.readFile(path.join(__dirname, 'fixtures/index.html'))
       const data = new Readable({
-        read () {
+        read() {
           data.push(out)
           data.push(null)
         }
@@ -78,7 +76,7 @@ app.on('ready', function () {
     const out = await s.transform(u)
 
     const data = new Readable({
-      read () {
+      read() {
         data.push(out)
         data.push(null)
       }
@@ -93,10 +91,10 @@ app.on('ready', function () {
 
   protocol.registerStreamProtocol('resolve', async function (request, reply) {
     const u = ScriptLinker.link.parse(request.url)
-    const r = u.filename || await s.resolve(u.resolve, u.dirname, { transform: u.transform })
+    const r = u.filename || (await s.resolve(u.resolve, u.dirname, { transform: u.transform }))
 
     const data = new Readable({
-      read () {
+      read() {
         data.push(r)
         data.push(null)
       }

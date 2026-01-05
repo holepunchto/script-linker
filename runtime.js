@@ -1,7 +1,7 @@
 const d = require('./defaults')
 const unixresolve = require('unix-path-resolve')
 
-module.exports = function runtime ({
+module.exports = function runtime({
   map = d.map,
   mapImport = d.mapImport,
   builtins = d.builtins,
@@ -13,11 +13,11 @@ module.exports = function runtime ({
 }) {
   const SLModule = defineModule()
 
-  const sl = global[Symbol.for(symbol)] = {
+  const sl = (global[Symbol.for(symbol)] = {
     Module: SLModule,
     sources: new Map(),
     require: null,
-    createImport (filename, doImport) {
+    createImport(filename, doImport) {
       const dirname = filename === '/' ? '/' : unixresolve(filename, '..')
       return (req) => {
         req = mapImport(req, dirname)
@@ -30,7 +30,7 @@ module.exports = function runtime ({
         }
       }
     },
-    createRequire (filename, parent = null, map = undefined) {
+    createRequire(filename, parent = null, map = undefined) {
       if (!parent) {
         parent = new SLModule(filename, null)
         parent.filename = filename
@@ -43,34 +43,35 @@ module.exports = function runtime ({
 
       return require
 
-      function resolve (request) {
+      function resolve(request) {
         return SLModule._resolveFilename(request, parent, false, { map })
       }
 
-      function require (request, opts) {
+      function require(request, opts) {
         const resolved = !!(opts && opts.resolved)
         return parent.require(request, { resolved, map })
       }
     },
-    requireFromSource (filename, source) {
+    requireFromSource(filename, source) {
       const parent = new SLModule(filename, null)
       return parent.require(filename, { source, resolved: true })
     },
-    bootstrap (entrypoint, { type } = {}) {
+    bootstrap(entrypoint, { type } = {}) {
       if (!entrypoint) throw new Error('Must pass entrypoint')
       if (!type) throw new Error('Must pass type')
-      const loader = (type === 'commonjs')
-        ? sl.createRequire(entrypoint)
-        : sl.createImport(entrypoint, (p) => import(p))
+      const loader =
+        type === 'commonjs'
+          ? sl.createRequire(entrypoint)
+          : sl.createImport(entrypoint, (p) => import(p))
       return loader(entrypoint)
     }
-  }
+  })
 
   sl.require = sl.createRequire('/')
 
   return sl
 
-  function resolveImport (dirname, req) {
+  function resolveImport(dirname, req) {
     const isBuiltin = builtins.has(req)
     return map(isBuiltin ? req : resolveSync(req, dirname, { isImport: true }), {
       protocol,
@@ -81,13 +82,13 @@ module.exports = function runtime ({
     })
   }
 
-  function getExtension (filename) {
+  function getExtension(filename) {
     const i = filename.lastIndexOf('.')
     return i > -1 ? filename.slice(i) : filename
   }
 
-  function defineModule () {
-    function Module (id = '', parent) {
+  function defineModule() {
+    function Module(id = '', parent) {
       this.id = id
       this.path = id === '/' ? id : unixresolve(id, '..')
       this.exports = {}
@@ -118,7 +119,9 @@ module.exports = function runtime ({
           const r = opts.map[request]
           if (r) return r
         } else {
-          return builtins.has(request) ? request : resolveSync(request, parent.path, { isImport: false })
+          return builtins.has(request)
+            ? request
+            : resolveSync(request, parent.path, { isImport: false })
         }
       } catch {}
 
@@ -158,13 +161,15 @@ module.exports = function runtime ({
       if (typeof (opts && opts.source) === 'string') return opts.source
       if (sl.sources.has(filename)) return sl.sources.get(filename)
 
-      return getSync(map(filename, {
-        protocol,
-        isImport: false,
-        isBuiltin: false,
-        isSourceMap: false,
-        isConsole: false
-      }))
+      return getSync(
+        map(filename, {
+          protocol,
+          isImport: false,
+          isBuiltin: false,
+          isSourceMap: false,
+          isConsole: false
+        })
+      )
     }
 
     Module.prototype._compile = function (source, filename) {
@@ -178,7 +183,14 @@ module.exports = function runtime ({
         }
       }
 
-      compile(this, this.exports, this.path, filename, sl.createRequire(this.path, this, map), source)
+      compile(
+        this,
+        this.exports,
+        this.path,
+        filename,
+        sl.createRequire(this.path, this, map),
+        source
+      )
     }
 
     Module.prototype.require = function (request, opts) {
@@ -196,11 +208,11 @@ module.exports = function runtime ({
   }
 }
 
-function isCustomScheme (str) {
+function isCustomScheme(str) {
   return /^[a-z][a-z0-9]+:/i.test(str)
 }
 
-function pathname (u) {
+function pathname(u) {
   const m = u.match(/^\w+:\/\/[^/]*(\/[^?]*)/)
   if (m) return decodeURI(m[1])
   return u
